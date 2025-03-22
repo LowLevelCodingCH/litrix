@@ -1,3 +1,3 @@
-#define STACK_SIZE 16384
+#define STACK_SIZE 16382
 
-void stack_init(unsigned int stack_top, unsigned char silent);
+void stack_init(char *stack, unsigned char silent);

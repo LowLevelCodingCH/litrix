@@ -23,7 +23,7 @@ void ata_read_sector(unsigned int lba, unsigned char *buffer) {
     outb(ATA_PRIMARY_CONTROL_BASE, 0x02);
     outb(ATA_PRIMARY_IO + 6, 0xE0 | ((lba >> 24) & 0x0F));
     outb(ATA_PRIMARY_IO + 1, 0x00);
-    outb(ATA_PRIMARY_IO + 2, 1); // Sector count
+    outb(ATA_PRIMARY_IO + 2, 1);
     outb(ATA_PRIMARY_IO + 3, (unsigned char) lba);
     outb(ATA_PRIMARY_IO + 4, (unsigned char)(lba >> 8));
     outb(ATA_PRIMARY_IO + 5, (unsigned char)(lba >> 16));
@@ -33,7 +33,7 @@ void ata_read_sector(unsigned int lba, unsigned char *buffer) {
     ata_wait_drq();
 
     for (int i = 0; i < 256; i++) {
-        ((unsigned short*)buffer)[i] = inw(ATA_PRIMARY_IO); // Use inw instead of inb
+        ((unsigned short*)buffer)[i] = inw(ATA_PRIMARY_IO);
     }
 }
 
@@ -41,7 +41,7 @@ void ata_write_sector(unsigned int lba, const unsigned char* buffer) {
     outb(ATA_PRIMARY_CONTROL_BASE, 0x02);
     outb(ATA_PRIMARY_IO + 6, 0xE0 | ((lba >> 24) & 0x0F));
     outb(ATA_PRIMARY_IO + 1, 0x00);
-    outb(ATA_PRIMARY_IO + 2, 1); // Sector count
+    outb(ATA_PRIMARY_IO + 2, 1);
     outb(ATA_PRIMARY_IO + 3, (unsigned char) lba);
     outb(ATA_PRIMARY_IO + 4, (unsigned char)(lba >> 8));
     outb(ATA_PRIMARY_IO + 5, (unsigned char)(lba >> 16));
@@ -59,6 +59,8 @@ void ata_write_sector(unsigned int lba, const unsigned char* buffer) {
 unsigned char ata_disk_status(void) {
     unsigned char status = inb(ATA_PRIMARY_IO + 7);
     if (status & STATUS_ERR) {
+        printf(LITRIX_ERR "[io::ata] Disk Error\n");
+        asm("hlt");
     }
     if (status & STATUS_DF) {
     }

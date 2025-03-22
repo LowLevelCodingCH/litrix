@@ -106,6 +106,11 @@ void print(char *s) {
         putc(s[i]);
 }
 
+void print_len(char *s, unsigned int n) {
+    for(int i = 0; i < n; i++)
+        putc(s[i]);
+}
+
 void println(char *s) {
     print(s);
     putln();

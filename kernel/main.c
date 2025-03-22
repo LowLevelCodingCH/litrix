@@ -18,6 +18,8 @@
 
 #include <litrix/scheduler.h>
 
+#include <litrix/fs/smfs.h>
+
 #define XKFS_BASE 60816
 #define VERSION 7
 #define NAME "Litrix"
@@ -28,7 +30,9 @@ struct vm_map vr_mmap = {0};
 struct heap_t heap = {0};
 struct process_t root = {0};
 char heap_adr[MEMAMOUNT*512];
-
+char sec1[512] = {0};
+char oldtext[512-32] = "Hallo Welt!\0";
+char newtext[512-32] = "Tschuess welt!\0";
 
 void rootfunc(unsigned int *esp) {
     char c = read();
@@ -48,14 +52,22 @@ void main(unsigned int stack_top) {
 
     stack = (void*)(stack_top - STACK_SIZE);
 
-
-
     if(stack == NULL) {
         printf("Stack is nil from beginning. Try to reboot!\n");
         asm("hlt");
     }
 
-    
+    printf("1 : SMFS [Simple File System]\n2 : XKFS [X Kernel File System]\nWhat Filesystem do you use [default: 1]: ");
+
+    char choice = read();
+
+    switch(choice) {
+    case '1': {smfs_ctl(); break;}
+    case '2': {printf("\nXKFS not implemented yet\n"); asm("hlt"); break;}
+    default: {smfs_ctl(); break;}
+    }
+
+
     stack_init(stack, 0);
     heap_init(&heap, heap_adr, 0);
     vm_init_map(&vr_mmap, 0);

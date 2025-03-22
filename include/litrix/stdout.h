@@ -15,6 +15,7 @@ void mmap_io_vga_putc(unsigned char c);
 void putc(unsigned char c);
 void putln(void);
 void print(char *s);
+void print_len(char *s, unsigned int n);
 void println(char *s);
 void clear(void);
 

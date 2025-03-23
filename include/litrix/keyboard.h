@@ -3,5 +3,5 @@
 
 extern char cchar;
 
-void init_keyboard(unsigned char silent);
+void init_keyboard(void);
 void keyboard_handler(void);

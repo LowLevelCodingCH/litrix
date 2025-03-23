@@ -45,7 +45,7 @@ void keyboard_handler(void) {
     cchar = ((scancode & 0x80) ? 0 : (shift_pressed ? uppercase[scancode] : lowercase[scancode]));
 }
 
-void init_keyboard(unsigned char silent) {
+void init_keyboard(void) {
     caps_on = 0;
     caps_lock = 0;
     cchar = 0;

@@ -4,10 +4,8 @@ struct process_t {
     pid_t pid;
     unsigned int running;
     unsigned int esp;
-    unsigned int uses_length;
-    unsigned int length;
     char name[16];
-    void (*_begin)(unsigned int *);
+    void (*_begin)(unsigned int *, pid_t);
     unsigned char stack[STACK_SIZE];
 };
 
@@ -15,13 +13,13 @@ struct process_t {
 extern struct process_t *plist[32];
 extern unsigned int cpid;
 
-struct process_t create_process(unsigned int length,
-                         unsigned int uses_length,
-                         void (*_begin)(unsigned int *),
-                         char name[16]);
+struct process_t create_process(void (*_begin)(unsigned int *, pid_t),
+                                char name[16]);
 pid_t attach_process(struct process_t *proc);
 void detach_process(pid_t pid);
 void step_process(pid_t pid);
 void step_processes(void);
 void print_process(pid_t pid);
+void list_processes(void);
+void sched(void);
 void scheduler(void);

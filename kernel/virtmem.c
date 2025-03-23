@@ -15,7 +15,7 @@ void *vm_find_address(struct vm_map *map, void *address) {
     return NULL;
 }
 
-void vm_init_map(struct vm_map *map, unsigned char silent) {
+void vm_init_map(struct vm_map *map) {
     if(!map)
         return;
 
@@ -23,7 +23,4 @@ void vm_init_map(struct vm_map *map, unsigned char silent) {
         map->addresses[i] = NULL;
         map->phys_addresses[i] = NULL;
     }
-
-    if(!silent)
-        printf(LITRIX_LOG "[io::vmem] Initialized Map\n");
 }

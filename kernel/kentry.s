@@ -13,7 +13,7 @@
 .section .bss
 .align 16
 stack_bottom:
-.skip 16382
+.skip 32768
 stack_top:
 
 .section .text

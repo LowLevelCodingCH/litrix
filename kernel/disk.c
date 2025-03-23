@@ -71,12 +71,9 @@ unsigned char ata_disk_status(void) {
     return status;
 }
 
-unsigned char init_ata(unsigned char silent) {
+unsigned char init_ata(void) {
     disable_ata_irq();
     ata_select_drive(0);
-
-    if(!silent)
-        printf(LITRIX_LOG "[io::ata] Initialized ATA\n");
 
     return ata_disk_status();
 }

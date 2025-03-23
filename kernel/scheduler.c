@@ -6,13 +6,9 @@
 struct process_t *plist[32];
 unsigned int cpid = 0;
 
-struct process_t create_process(unsigned int length,
-                         unsigned int uses_length,
-                         void (*_begin)(unsigned int *),
-                         char name[16]) {
+struct process_t create_process(void (*_begin)(unsigned int *, pid_t),
+                                char name[16]) {
     struct process_t p;
-    p.uses_length = uses_length;
-    p.length = length;
     p.running = 1;
     p._begin = _begin;
     p.esp = (unsigned int)((char*)(p.stack + STACK_SIZE));
@@ -41,7 +37,6 @@ void detach_process(pid_t pid) {
     printf("[io::sched] Detached task: `%s` with pid %d\n", plist[pid]->name, plist[pid]->pid);
 
     memset((char*)plist[pid]->name, 0, 16);
-    plist[pid]->length = 0;
     plist[pid]->esp = 0;
     plist[pid]->running = 0;
     plist[pid]->_begin = NULL;
@@ -60,7 +55,7 @@ void step_process(pid_t pid) {
     if(!plist[pid]) return;
     if(plist[pid]->running != 1) return;
 
-    plist[pid]->_begin(&plist[pid]->esp);
+    plist[pid]->_begin(&plist[pid]->esp, plist[pid]->pid);
 }
 
 void step_processes(void) {
@@ -74,6 +69,16 @@ void print_process(pid_t pid) {
            plist[pid]->running);
 }
 
-void scheduler(void) {
+void list_processes(void) {
+    for(int i = 0; i < cpid; i++) {
+        printf("pid[%d] : %s\n", plist[i]->pid, plist[i]->name);
+    }
+}
+
+void sched(void) {
     step_processes();
+}
+
+void scheduler(void) {
+    for(;;) sched();
 }

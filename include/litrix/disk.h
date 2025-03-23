@@ -20,6 +20,6 @@ void ata_select_drive(unsigned char drive);
 void ata_read_sector(unsigned int lba, unsigned char *buffer);
 void ata_write_sector(unsigned int lba, const unsigned char* buffer);
 unsigned char ata_disk_status(void);
-unsigned char init_ata(unsigned char silent);
+unsigned char init_ata(void);
 void ata_read(unsigned char* buff, unsigned int lba, unsigned int count);
 void ata_write(const unsigned char* buff, unsigned int lba, unsigned int count);

@@ -1,7 +1,7 @@
 #include <litrix/stdout.h>
 #include <litrix/memory.h>
 
-void heap_init(struct heap_t *heap, char *heap_adr, unsigned char silent) {
+void heap_init(struct heap_t *heap, char *heap_adr) {
     if(!heap) return;
     if(!heap_adr) return;
 
@@ -10,9 +10,6 @@ void heap_init(struct heap_t *heap, char *heap_adr, unsigned char silent) {
         heap->blocks[i].free = 0;
         heap->blocks[i].ptr  = heap_adr + (i * 512);
     }
-
-    if(!silent)
-        printf(LITRIX_LOG "[io::heap] Initialized Heap\n");
 }
 
 void *heap_malloc(unsigned int size, struct heap_t *heap) {

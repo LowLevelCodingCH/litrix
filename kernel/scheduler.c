@@ -34,7 +34,7 @@ pid_t attach_process(struct process_t *proc) {
 void detach_process(pid_t pid) {
     if(!plist[pid]) return;
 
-    printf("[io::sched] Detached task: `%s` with pid %d\n", plist[pid]->name, plist[pid]->pid);
+    printf("[io::sched] Detached process: `%s` with pid %d\n", plist[pid]->name, plist[pid]->pid);
 
     memset((char*)plist[pid]->name, 0, 16);
     plist[pid]->esp = 0;
@@ -42,13 +42,22 @@ void detach_process(pid_t pid) {
     plist[pid]->_begin = NULL;
 
     for(int i = 0; i < 32; i++) {
-        if(i >= pid && i < 32)
+        if(i >= pid && i < 32) {
             plist[i] = plist[i + 1];
+            plist[i]->pid = i;
+        }
         if(i == 32)
 	    plist[i] = NULL;
     }
 
     cpid--;
+}
+
+void detach_all(void) {
+    for(int i = cpid; i > 0; i--) {
+        detach_process(i);
+    }
+    detach_process(0);
 }
 
 void step_process(pid_t pid) {

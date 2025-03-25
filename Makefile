@@ -12,11 +12,11 @@ build:
 
 make_kentry:
 	@echo "GAS kernel/kentry.s"
-	@gcc -nostdlib -nodefaultlibs -Wall -Wextra -Werror -ffreestanding -m32 -g -c kernel/kentry.s -o kernel/kentry.o > /dev/null
+	@nasm -f elf32 -o kernel/kentry.o kernel/kentry.s
 
 make_main:
 	@echo "CC  kernel/main.c"
-	@gcc -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/main.c -o kernel/main.o -Iinclude > /dev/null
+	@gcc -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/main.c -o kernel/main.o -Iinclude > /dev/null
 
 make_other:
 	@echo "CC  kernel/keyboard.c"
@@ -25,10 +25,14 @@ make_other:
 	@gcc -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/stdout.c -o kernel/stdout.o -Iinclude > /dev/null
 	@echo "CC  kernel/pit.c"
 	@gcc -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/pit.c -o kernel/pit.o -Iinclude > /dev/null
+	@echo "CC  kernel/cpu.c"
+	@gcc -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/cpu.c -o kernel/cpu.o -Iinclude > /dev/null
 	@echo "CC  kernel/disk.c"
 	@gcc -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/disk.c -o kernel/disk.o -Iinclude > /dev/null
 	@echo "CC  kernel/fs/smfs.c"
 	@gcc -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/fs/smfs.c -o kernel/fs/smfs.o -Iinclude > /dev/null
+	@echo "CC  kernel/fs/lifs.c"
+	@gcc -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/fs/lifs.c -o kernel/fs/lifs.o -Iinclude > /dev/null
 	@echo "CC  kernel/portio.c"
 	@gcc -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/portio.c -o kernel/portio.o -Iinclude > /dev/null
 	@echo "CC  kernel/device.c"
@@ -48,21 +52,23 @@ make_other:
 
 link:
 	@echo "LD  -o vmlitrix"
-	@ld -melf_i386 -T kernel/linker.ld -o vmlitrix kernel/kentry.o kernel/main.o kernel/memory.o kernel/stack.o kernel/virtmem.o kernel/keyboard.o kernel/pit.o kernel/disk.o kernel/portio.o kernel/stdout.o kernel/syscall.o kernel/syscall_wrapper.o kernel/scheduler.o kernel/fs/smfs.o kernel/device.o > /dev/null
+	@ld -melf_i386 -T kernel/linker.ld -o vmlitrix kernel/kentry.o kernel/main.o kernel/memory.o kernel/stack.o kernel/virtmem.o kernel/keyboard.o kernel/pit.o kernel/cpu.o kernel/disk.o kernel/portio.o kernel/stdout.o kernel/syscall.o kernel/syscall_wrapper.o kernel/scheduler.o kernel/fs/lifs.o kernel/fs/smfs.o kernel/device.o > /dev/null
 
 debugkrn:
 	@echo "DBG -o vmlitrix.asm"
 	@objdump -M i386,pseudoc,intel -d -S vmlitrix > vmlitrix.asm
+	@echo "DBG -o vmlitrix.sym"
+	@objdump -t vmlitrix > vmlitrix.sym
 
 makedisk:
-	@echo "AS  -o disk.img"
-	@nasm -fbin -o disk.img disk.s
+	@echo "AS  -o disk.dimg"
+	@nasm -fbin -o disk.dimg disk.s
 
 clean:
-	@rm disk.img > /dev/null
+	@rm disk.dimg > /dev/null
 	@rm kernel/*.o > /dev/null
 	@rm kernel/fs/*.o > /dev/null
 	@rm vmlitrix* > /dev/null
 
 test:
-	@qemu-system-i386 -kernel vmlitrix -drive file=disk.img,if=ide,media=disk
+	@qemu-system-i386 -m 128 -M pc -kernel vmlitrix -drive file=disk.dimg,if=ide,media=disk,format=raw

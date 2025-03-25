@@ -22,6 +22,6 @@ struct dev_t {
     enum dev_perms perms;
 };
 
-void init_dev(struct dev_t *d, char fname[32], enum dev_type type, enum dev_perms perms);
+void init_dev(struct dev_t *dev, char fname[32], enum dev_type type, enum dev_perms perms);
 void read_dev(struct dev_t *dev, char *buf);
 void write_dev(struct dev_t *dev, char *buf);

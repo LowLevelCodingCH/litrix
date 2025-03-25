@@ -1,12 +1,13 @@
 #include <litrix/device.h>
 #include <litrix/memory.h>
+#include <litrix/fs/lifs.h>
 #include <litrix/fs/smfs.h>
 #include <litrix/stdout.h>
 
-void init_dev(struct dev_t *d, char fname[32], enum dev_type type, enum dev_perms perms) {
-    memcpy(d->file, fname, 32);
-    d->perms = perms;
-    d->type = type;
+void init_dev(struct dev_t *dev, char fname[32], enum dev_type type, enum dev_perms perms) {
+    memcpy(dev->file, fname, 32);
+    dev->perms = perms;
+    dev->type = type;
 }
 
 void read_dev(struct dev_t *dev, char *buf) {

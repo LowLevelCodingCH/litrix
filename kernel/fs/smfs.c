@@ -25,7 +25,6 @@ void smfs_ctl(void) {
         memcpy(fs_entries[i].name, data, 32);
         memcpy(fs_entries[i].data, data+32, 512-32);
     }
-    clear();
 }
 
 int smfs_read(char name[32], char *buf) {

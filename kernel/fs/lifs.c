@@ -17,7 +17,7 @@ void lifs_ctl(void) {
     for(int i = 0; i < LIFS_MAX_FILES; i++) {
         ata_read_sector(i, buf);
         
-	struct inode inod = {0};
+        struct inode inod = {0};
 
         inod.size = ((unsigned int*)(buf))[8];
         for(int j = 0; j < 8; j++)

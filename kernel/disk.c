@@ -50,7 +50,7 @@ void ata_write_sector(unsigned int lba, const unsigned char* buffer) {
     ata_wait_bsy();
 
     for (int i = 0; i < 256; i++) {
-        outw(ATA_PRIMARY_IO, ((unsigned short*)buffer)[i]); // Use outw instead of outb
+        outw(ATA_PRIMARY_IO, ((unsigned short*)buffer)[i]);
     }
 
     ata_wait_bsy();
@@ -59,7 +59,7 @@ void ata_write_sector(unsigned int lba, const unsigned char* buffer) {
 unsigned char ata_disk_status(void) {
     unsigned char status = inb(ATA_PRIMARY_IO + 7);
     if (status & STATUS_ERR) {
-        printf(LITRIX_ERR "[io::ata] Disk Error\n");
+        panic("[ata] Disk Error\n");
         asm("hlt");
     }
     if (status & STATUS_DF) {

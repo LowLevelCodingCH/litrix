@@ -34,7 +34,7 @@ pid_t attach_process(struct process_t *proc) {
 void detach_process(pid_t pid) {
     if(!plist[pid]) return;
 
-    printf("[io::sched] Detached process: `%s` with pid %d\n", plist[pid]->name, plist[pid]->pid);
+    printf("[sched] Detached process: `%s` with pid %d\n", plist[pid]->name, plist[pid]->pid);
 
     memset((char*)plist[pid]->name, 0, 16);
     plist[pid]->esp = 0;

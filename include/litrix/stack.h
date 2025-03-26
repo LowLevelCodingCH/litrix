@@ -1,3 +1,3 @@
-#define STACK_SIZE 32768
+#define STACK_SIZE 65536
 
 void stack_init(char *stack);

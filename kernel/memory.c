@@ -60,3 +60,7 @@ void *memcpy(void *dest, const void *src, unsigned int n) {
 
     return dest;
 }
+
+void *memmove(void *dest, const void *src, unsigned int n) {
+    return memcpy(dest, src, n);
+}

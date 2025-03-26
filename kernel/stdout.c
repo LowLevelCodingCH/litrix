@@ -4,12 +4,12 @@
 #include <litrix/stdarg.h>
 
 int cursor = 0;
-unsigned char color  = 0x07;
+unsigned char color = 0;
 
 unsigned int strlen(char *s) {
     unsigned int i = 0;
   
-    while(*s != 0) {
+    while(*s) {
         s++;
         i++;
     }
@@ -46,7 +46,7 @@ void sub_cursor(void) {
 }
 
 void set_cursor(unsigned int i) {
-    cursor = i*2;
+    cursor = i * 2;
     vis_cursor();
 }
 
@@ -93,8 +93,26 @@ void mmap_io_vga_putc(unsigned char c) {
     outb(0x3D5, (cursor/2) & 0xFF);
 }
 
+void pmap_io_serial_putc(unsigned char c) {
+    outb(0x3F8, c);
+}
+
+void pmap_io_debug_putc(unsigned char c) {
+    outb(0xE9, c);
+}
+
 void putc(unsigned char c) {
+    #ifdef VGA
     mmap_io_vga_putc(c);
+    #endif
+
+    #ifdef SERIAL
+    pmap_io_serial_putc(c);
+    #endif
+
+    #ifdef DEBUG
+    pmap_io_debug_putc(c);
+    #endif
 }
 
 void putln(void) {
@@ -117,16 +135,12 @@ void println(char *s) {
 }
 
 void clear(void) {
-    set_color(0x07);
-
     set_cursor(0);
   
     for(int i = 0; i < 80*25; i++)
         putc(' ');
 
     set_cursor(0);
-
-    set_color(0x07);
 }
 
 int atoi(char* str) {
@@ -156,7 +170,7 @@ int atoi(char* str) {
     return sign * num;
 }
 
-char* itoa(int num) {
+char* itoa(int num, int base) {
     char buffer[16];
     char* str;
     int i = 0, j = 0;
@@ -168,19 +182,25 @@ char* itoa(int num) {
     }
 
     do {
-        buffer[i++] = (num % 10) + '0';
-        num /= 10;
+        if(base <= 10) buffer[i++] = (num % base) + '0';
+        else if (base == 16){
+            if((num % base) + '0' == ':') buffer[i++] = 'A';
+            if((num % base) + '0' == ';') buffer[i++] = 'B';
+            if((num % base) + '0' == '<') buffer[i++] = 'C';
+            if((num % base) + '0' == '=') buffer[i++] = 'D';
+            if((num % base) + '0' == '>') buffer[i++] = 'E';
+            if((num % base) + '0' == '?') buffer[i++] = 'F';
+        }
+        num /= base;
     } while (num > 0);
 
-    if (is_negative) {
+    if (is_negative)
         buffer[i++] = '-';
-    }
 
     buffer[i] = '\0';
 
-    for (j = 0; j < i; j++) {
+    for (j = 0; j < i; j++)
         str[j] = buffer[i - j - 1];
-    }
     str[j] = '\0';
     return str;
 }
@@ -192,12 +212,13 @@ void printf(char* fmt, ...) {
     int i = 0;
     const char* p = fmt;
     while (*p) {
-        if (*p == '%' && *(p + 1)) {
-            p++;
+        if (*p == '%' && *(p++)) {
             switch (*p) {
             case 'f': {
-                unsigned char f = (unsigned char)va_arg(args, char);
+                unsigned char f = (unsigned char)va_arg(args, unsigned int);
                 set_color(f);
+                i++;
+                break;
             }
             case 'c': {
                 char c = (char)va_arg(args, int);
@@ -207,8 +228,29 @@ void printf(char* fmt, ...) {
             }
             case 'd': {
                 unsigned int i = va_arg(args, int);
-                print(itoa(i));
-                i+=strlen(itoa(i));
+                print(itoa(i, 10));
+                i+=strlen(itoa(i, 10));
+                break;
+            }
+            case 'x': {
+                unsigned int i = va_arg(args, int);
+                print("0x");
+                print(itoa(i, 16));
+                i+=strlen(itoa(i, 16));
+                break;
+            }
+            case 'p': {
+                unsigned int i = (unsigned int)va_arg(args, void*);
+                print("0x");
+                print(itoa(i, 16));
+                i+=strlen(itoa(i, 16));
+                break;
+            }
+            case 'o': {
+                unsigned int i = va_arg(args, unsigned int);
+                print("0o");
+                print(itoa(i, 8));
+                i+=strlen(itoa(i, 8));
                 break;
             }
             case 's': {
@@ -230,5 +272,89 @@ void printf(char* fmt, ...) {
         }
         p++;
     }
+    va_end(args);
+}
+
+void panic(char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    set_color(0x1f);
+    clear();
+
+    for(int i = 0; i < 25/2; i++) putln();
+    for(int i = 0; i < (80/2)-(strlen(fmt)/2)-2; i++) putc(' ');
+
+    //PRINTF_BEGIN
+
+    int i = 0;
+    const char* p = fmt;
+    while (*p) {
+        if (*p == '%' && *(p++)) {
+            switch (*p) {
+            case 'f': {
+                unsigned char f = (unsigned char)va_arg(args, unsigned int);
+                set_color(f);
+                i++;
+                break;
+            }
+            case 'c': {
+                char c = (char)va_arg(args, int);
+                putc(c);
+                i++;
+                break;
+            }
+            case 'd': {
+                unsigned int i = va_arg(args, int);
+                print(itoa(i, 10));
+                i+=strlen(itoa(i, 10));
+                break;
+            }
+            case 'x': {
+                unsigned int i = va_arg(args, int);
+                print("0x");
+                print(itoa(i, 16));
+                i+=strlen(itoa(i, 16));
+                break;
+            }
+            case 'p': {
+                unsigned int i = (unsigned int)va_arg(args, void*);
+                print("0x");
+                print(itoa(i, 16));
+                i+=strlen(itoa(i, 16));
+                break;
+            }
+            case 'o': {
+                unsigned int i = va_arg(args, unsigned int);
+                print("0o");
+                print(itoa(i, 8));
+                i+=strlen(itoa(i, 8));
+                break;
+            }
+            case 's': {
+                char* str = va_arg(args, char*);
+                print(str);
+                i+=strlen(str);
+                break;
+            }
+            default: {
+                putc('%');
+                putc(*p);
+                i++;
+                break;
+            }
+            }
+        } else {
+            putc(*p);
+            i++;
+        }
+        p++;
+    }
+
+    //PRINTF_END
+
+    set_cursor(1000000);
+    asm volatile("hlt");
+
     va_end(args);
 }

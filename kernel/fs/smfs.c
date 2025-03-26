@@ -23,28 +23,27 @@ void smfs_ctl(void) {
         ata_read_sector(i, data);
 
         memcpy(fs_entries[i].name, data, 32);
-        memcpy(fs_entries[i].data, data+32, 512-32);
+        memcpy(fs_entries[i].data, data + 32, 512 - 32);
     }
 }
 
 int smfs_read(char name[32], char *buf) {
     for(int i = 0; i < SMFS__MAX_FILES; i++) {
         if(strcmp(fs_entries[i].name, name) == 0) {
-            for(int j = 0; j < 512-32; j++)
+            for(int j = 0; j < 512 - 32; j++)
                 buf[j] = fs_entries[i].data[j];
+
             return 0;
         }
     }
-    printf(LITRIX_ERR "[io::smfs] No such file: %s\n", name);
+    printf("[smfs] No such file: %s\n", name);
     return -1;
 }
 
 int smfs_test(char name[32]) {
-    for(int i = 0; i < SMFS__MAX_FILES; i++) {
-        if(strcmp(fs_entries[i].name, name) == 0) {
+    for(int i = 0; i < SMFS__MAX_FILES; i++)
+        if(strcmp(fs_entries[i].name, name) == 0)
             return -1;
-        }
-    }
 
     return 0;
 }
@@ -66,7 +65,7 @@ int smfs_write(char name[32], char data[512-32]) {
             return 0;
         }
     }
-    printf(LITRIX_ERR "[io::smfs] No such file: %s\n", name);
+    printf("[smfs] No such file: %s\n", name);
     return -1;
 }
 
@@ -76,6 +75,7 @@ int smfs_rename(char name[32], char newname[32]) {
     char data[512-32] = {0};
 
     smfs_read(name, data);
+
     for(int i = 0; i < SMFS__MAX_FILES; i++) {
         if(strcmp(fs_entries[i].name, name) == 0) {
             memcpy(fs_entries[i].name, newname, 32);
@@ -107,9 +107,7 @@ int smfs_creat(char name[32]) {
 
 void smfs_list(void) {
     printf("ID  Name\n");
-    for(int i = 0; i < SMFS__MAX_FILES; i++) {
-        if(strcmp(fs_entries[i].name, "") != 0) {
+    for(int i = 0; i < SMFS__MAX_FILES; i++)
+        if(strcmp(fs_entries[i].name, "") != 0)
             printf("%d\t%s\n", i, fs_entries[i].name);
-	}
-    }
 }

@@ -19,3 +19,4 @@ void heap_free(void *block, struct heap_t *heap);
 unsigned char memcmp(void *p1, void *p2, unsigned int len);
 void memset(void *mem, char set, unsigned int len);
 void *memcpy(void *dest, const void *src, unsigned int n);
+void *memmove(void *dest, const void *src, unsigned int n);

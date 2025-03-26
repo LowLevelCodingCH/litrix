@@ -3,9 +3,7 @@
 #include <litrix/memory.h>
 
 void *vm_find_address(struct vm_map *map, void *address) {
-    if(!map)
-        return NULL;
-    if(!address)
+    if(!map || !address)
         return NULL;
 
     for(int i = 0; i < VM_MAP_AMOUNT; i++)

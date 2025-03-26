@@ -9,7 +9,7 @@ void init_pit(unsigned int frequency) {
     outb(PIT_CHANNEL_0, (unsigned char)(divisor & 0xFF));
     outb(PIT_CHANNEL_0, (unsigned char)((divisor >> 8) & 0xFF));
 
-    printf(LITRIX_LOG "[io::pit] Initialized PIT");
+    printf("[pit] Initialized PIT");
 }
 
 void pit_wait(unsigned int milliseconds) {
@@ -18,7 +18,6 @@ void pit_wait(unsigned int milliseconds) {
     outb(count & 0xFF, PIT_CHANNEL_0);
     outb((count >> 8) & 0xFF, PIT_CHANNEL_0);
 
-    while (count > 0) {
+    while (count > 0)
         count--;
-    }
 }

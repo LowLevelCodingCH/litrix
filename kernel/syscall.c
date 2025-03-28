@@ -50,8 +50,6 @@ void sysc_process(char call) {
     unsigned int sarg1 = sysc_rarg1();
     unsigned int sarg2 = sysc_rarg2();
 
-    printf("Executing syscall: %d . %d, %d, %d\n", call, sarg0, sarg1, sarg2);
-
     switch(call) {
     case PRINT:   print_len((char*)sarg0, (unsigned int)sarg1); break;
     case READFIL: lifs_read((char*)sarg0, (char*)sarg1); break;

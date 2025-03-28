@@ -1,6 +1,6 @@
-#define SYSCALL_ADDRESS  0x1eeeee0
-#define SYSRET_ADDRESS   0x1eeeee8
-#define SYSSET_ADDRESS   0x1eeeee0
+#define SYSCALL_ADDRESS  0x1dddddd
+#define SYSRET_ADDRESS   0x1eeeeee
+#define SYSSET_ADDRESS   0x1ffffff
 
 #define SYSRET_REGISTER  (unsigned int*)(SYSRET_ADDRESS)
 #define SYSCALL_REGISTER (unsigned char*)(SYSCALL_ADDRESS)

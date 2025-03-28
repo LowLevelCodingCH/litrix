@@ -91,16 +91,16 @@ int m(unsigned int stack_top) {
     root = create_process(root_func, "root");
     root_pid = attach_process(&root);
 
-    lifs_creat("dev.out.tty0");
-    lifs_creat("dev.blk.ide0");
+    lifs_creat("dev.tty0");
+    lifs_creat("dev.ide0");
 
-    init_dev(&tty, "dev.out.tty0", OUTPUT,    READ_WRITE);
-    init_dev(&ide, "dev.blk.ide",  BLOCK_ATA, READ_WRITE);
+    init_dev(&tty, "dev.tty0" , OUTPUT, READ_WRITE);
+    init_dev(&ide, "dev.ide", BLOCK_ATA, READ_WRITE);
 
     lifs_creat("kbd.lay::DE_ch@lower");
     lifs_creat("kbd.lay::DE_ch@upper");
 
-    lifs_write("kbd.lay::DE_ch@lower", 256, (char*)lowercase);
+    lifs_write("kbkd.lay::DE_ch@lower", 256, (char*)lowercase);
     lifs_write("kbd.lay::DE_ch@upper", 256, (char*)uppercase);
 
     scheduler();

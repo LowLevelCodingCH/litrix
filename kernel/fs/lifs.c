@@ -25,21 +25,22 @@ void lifs_ctl(void) {
 
         lifs_inodes[i].size = ((unsigned int*)(buf))[LIFS_BLOCKS];
 
-        for(int j = 0; j < LIFS_BLOCKS; j++) {
-            lifs_inodes[i].blocks[j] = ((lba_t*)(buf))[j];
-            if(last_biggest_adr < lifs_inodes[i].blocks[j]) {
-                biggest_adr = lifs_inodes[i].blocks[j];
-                last_biggest_adr = lifs_inodes[i].blocks[j];
+	if(lifs_inodes[i].size != 0) {
+            for(int j = 0; j < LIFS_BLOCKS; j++) {
+                lifs_inodes[i].blocks[j] = ((lba_t*)(buf))[j];
+                if(last_biggest_adr < lifs_inodes[i].blocks[j]) {
+                    biggest_adr = lifs_inodes[i].blocks[j];
+                    last_biggest_adr = lifs_inodes[i].blocks[j];
+                }
             }
+
+            if(lifs_inodes[i].blocks[0] != 0) taken_inode_spaces++;
+
+            for(int j = 0; j < 128; j++)
+                lifs_inodes[i].name[j] = buf[4 * LIFS_BLOCKS + 4 + j];
+
+            memset(lifs_inodes[i].resv, 0, LIFS_RESV);
         }
-
-        if(lifs_inodes[i].blocks[0] != 0) taken_inode_spaces++;
-
-
-        for(int j = 0; j < 128; j++)
-            lifs_inodes[i].name[j] = buf[4 * LIFS_BLOCKS + 4 + j];
-
-        memset(lifs_inodes[i].resv, 0, LIFS_RESV);
     }
 }
 
@@ -67,7 +68,7 @@ void lifs_creat(char *name) {
     inod.blocks[2] = block2;
     inod.blocks[3] = block3;
     inod.blocks[4] = block4;
-    inod.size = 512;
+    inod.size = 512*LIFS_BLOCKS;
 
     if(strlen(name) <= 128) {
         for(int i = 0; i < strlen(name); i++)
@@ -126,12 +127,21 @@ void lifs_blk_iwrite(struct inode *inod, char *buffer, unsigned int amount, unsi
 void lifs_iwrite(struct inode *inod, unsigned int amount, char *buffer) {
     if(amount > LIFS_BLOCKS*512) panic("[lifs] Error. I dont rlly care enough to tell ya.\n");
 
-    if(amount % 512 == 0)
-        for(int i = 0; i < amount / 512; i++)
-            lifs_blk_iwrite(inod, buffer, amount, i);
-    else
-        for(int i = 0; i < ((amount / 512) + 1); i++) 
-            lifs_blk_iwrite(inod, buffer, amount, 0);
+    char buf1[512];
+    char buf2[512];
+    memset(buf1, 0, 512);
+    memset(buf2, 0, 512);
+
+    memcpy(buf1, buffer, amount);
+
+    if(amount > 512) {
+        memcpy(buf1, buffer, 512);
+        buffer -= 512;
+        memcpy(buf2, buffer, amount - 512);
+    }
+
+    lifs_blk_iwrite(inod, buf1, 512, 0);
+    lifs_blk_iwrite(inod, buf2, 512, 1);
 }
 
 

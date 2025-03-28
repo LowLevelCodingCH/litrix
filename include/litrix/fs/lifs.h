@@ -1,4 +1,4 @@
-#define LIFS_MAX_FILES 20
+#define LIFS_MAX_FILES 128
 #define LIFS_BLOCKS 5
 #define LIFS_RESV ((sizeof(char)*512)-((sizeof(int)*LIFS_BLOCKS)+sizeof(int)+(sizeof(char)*128)))
 
@@ -21,10 +21,13 @@ void lifs_ctl(void);
 
 // INode funcs
 void lifs_iread(struct inode *inod, char *buffer);
-void lifs_blk_iwrite(struct inode *inod, char *buffer, unsigned int blkadr);
-void lifs_iwrite(struct inode *inod, char *buffer);
+void lifs_blk_iwrite(struct inode *inod, char *buffer, unsigned int amount, unsigned int blkadr);
+void lifs_iwrite(struct inode *inod, unsigned int amount, char *buffer);
 
 // Name funcs
 void lifs_read(char *name, char *buffer);
-void lifs_write(char *name, char *buffer);
+void lifs_write(char *name, unsigned int amount, char *buffer);
 void lifs_creat(char *name);
+
+// Other funcs
+void lifs_list(void);

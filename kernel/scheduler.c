@@ -7,20 +7,28 @@ struct process_t *plist[32];
 unsigned int cpid = 0;
 
 struct process_t create_process(void (*_begin)(unsigned int *, pid_t),
-                                char name[16]) {
+                                char *name) {
     struct process_t p;
+
+    if(strlen(name) > 16) {
+        printf("[sched] Process name too long\n");
+        return p;
+    }
+
+    char n[16];
+
+    memset(n, 0, 16);
+    memcpy(n, name, strlen(name));
+
     p.running = 1;
     p._begin = _begin;
     p.esp = (unsigned int)((char*)(p.stack + STACK_SIZE));
 
     for(int i = 0; i < 16; i++)
-        p.name[i] = name[i];
+        p.name[i] = n[i];
 
-    //p.pid = cpid; // will be done in attach_process
     return p;
 }
-
-// See, this uses child-friendly names instead of linux's "kill"
 
 pid_t attach_process(struct process_t *proc) {
     if(cpid >= 32) return -1;
@@ -31,10 +39,12 @@ pid_t attach_process(struct process_t *proc) {
     return proc->pid;
 }
 
+// See, this uses child-friendly names instead of linux's "kill"
 void detach_process(pid_t pid) {
     if(!plist[pid]) return;
 
-    printf("[sched] Detached process: `%s` with pid %d\n", plist[pid]->name, plist[pid]->pid);
+    printf("[sched] Detached process: `%s`, pid %d\n",
+           plist[pid]->name, plist[pid]->pid);
 
     memset((char*)plist[pid]->name, 0, 16);
     plist[pid]->esp = 0;
@@ -46,9 +56,10 @@ void detach_process(pid_t pid) {
             plist[i] = plist[i + 1];
             plist[i]->pid = i;
         }
-        if(i == 32)
-	    plist[i] = NULL;
     }
+
+    plist[pid] = NULL;
+    plist[31] = NULL;
 
     cpid--;
 }
@@ -80,7 +91,7 @@ void print_process(pid_t pid) {
 
 void list_processes(void) {
     for(int i = 0; i < cpid; i++) {
-        printf("pid[%d] : %s\n", plist[i]->pid, plist[i]->name);
+        printf("pid[%d] : %s , %d , %d\n", plist[i]->pid, plist[i]->name, plist[i]->esp, plist[i]->_begin);
     }
 }
 

@@ -1,22 +1,10 @@
-dd 0x1BADB002
+extern m
+global _
+dd 464367618
 dd 3
-dd 0xE4524FFB
-
-[extern] main
-
-section .data
-
-stack_bottom:
-times 65536 db 0
-stack_top:
-
-section .text
-    global _start
-
-_start:
-    mov esp, stack_top
-
-    push esp
-    call main
-
-    hlt
+dd 3830599675
+s:times 16384 db 0
+_:mov esp,s
+add esp,16384
+push esp
+jmp m

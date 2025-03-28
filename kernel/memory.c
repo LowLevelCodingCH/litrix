@@ -50,7 +50,7 @@ void memset(void *mem, char set, unsigned int len) {
     }
 }
 
-void *memcpy(void *dest, const void *src, unsigned int n) {
+void *memcpy(void *dest, void *src, unsigned int n) {
     unsigned char *d = dest;
     const unsigned char *s = src;
 
@@ -61,6 +61,9 @@ void *memcpy(void *dest, const void *src, unsigned int n) {
     return dest;
 }
 
-void *memmove(void *dest, const void *src, unsigned int n) {
-    return memcpy(dest, src, n);
+// Actually MOVES the data. not copy
+void *memmove(void *dest, void *src, unsigned int n) {
+    memcpy(dest, src, n);
+    memset(src, 0, n);
+    return dest;
 }

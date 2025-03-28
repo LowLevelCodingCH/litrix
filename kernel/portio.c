@@ -20,11 +20,11 @@ char inb(short port) {
     return ret;
 }
 
-static inline void outl(short port, int value) {
+void outl(short port, int value) {
     asm("outl %%eax, %%dx" :: "d" (port), "a" (value));
 }
 
-static inline int inl(short port) {
+int inl(short port) {
     int ret;
     asm("inl %1, %0" : "=a" (ret) : "dN" (port));
     return ret;

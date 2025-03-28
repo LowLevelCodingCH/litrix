@@ -1,6 +1,7 @@
 #include <litrix/stdout.h>
 #include <litrix/portio.h>
 #include <litrix/memory.h>
+#include <litrix/syscall.h>
 #include <litrix/stdarg.h>
 
 int cursor = 0;
@@ -58,8 +59,8 @@ void set_cursor(unsigned int i) {
 //    outb
 //    portb
 //NOTE: Name: memory mapped input output video graphics array put char
-void mmap_io_vga_putc(unsigned char c) {
-    if(c == 0)
+void mmio_vga_putc(unsigned char c) {
+    if(c == 0 || c < 0x05)
         return;
     if(c == '\n') {
         int next_ln = ((cursor / 2) / 80) + 1;
@@ -83,8 +84,9 @@ void mmap_io_vga_putc(unsigned char c) {
     if(c == 0x05 && cursor >= 1) {
         *(char*)(0xb8000+cursor-2) = ' ';
         *(char*)(0xb8000+cursor) = ' ';
-        cursor -= 2*(2);
+        cursor -= 4;
     }
+
     cursor += 2;
 
     outb(0x3D4, 0x0E);
@@ -97,21 +99,21 @@ void pmap_io_serial_putc(unsigned char c) {
     outb(0x3F8, c);
 }
 
-void pmap_io_debug_putc(unsigned char c) {
-    outb(0xE9, c);
+void pmap_io_parallel_putc(unsigned char c) {
+    outb(0x378, c);
 }
 
 void putc(unsigned char c) {
     #ifdef VGA
-    mmap_io_vga_putc(c);
+    mmio_vga_putc(c);
     #endif
 
     #ifdef SERIAL
     pmap_io_serial_putc(c);
     #endif
 
-    #ifdef DEBUG
-    pmap_io_debug_putc(c);
+    #ifdef PARALLEL
+    pmap_io_parallel_putc(c);
     #endif
 }
 
@@ -120,6 +122,11 @@ void putln(void) {
 }
 
 void print(char *s) {
+    for(int i = 0; i < strlen(s); i++)
+        putc(s[i]);
+}
+
+void puts(char *s) {
     for(int i = 0; i < strlen(s); i++)
         putc(s[i]);
 }
@@ -228,34 +235,34 @@ void printf(char* fmt, ...) {
             }
             case 'd': {
                 unsigned int i = va_arg(args, int);
-                print(itoa(i, 10));
+                puts(itoa(i, 10));
                 i+=strlen(itoa(i, 10));
                 break;
             }
             case 'x': {
                 unsigned int i = va_arg(args, int);
-                print("0x");
-                print(itoa(i, 16));
+                puts("0x");
+                puts(itoa(i, 16));
                 i+=strlen(itoa(i, 16));
                 break;
             }
             case 'p': {
                 unsigned int i = (unsigned int)va_arg(args, void*);
-                print("0x");
-                print(itoa(i, 16));
+                puts("0x");
+                puts(itoa(i, 16));
                 i+=strlen(itoa(i, 16));
                 break;
             }
             case 'o': {
                 unsigned int i = va_arg(args, unsigned int);
-                print("0o");
-                print(itoa(i, 8));
+                puts("0o");
+                puts(itoa(i, 8));
                 i+=strlen(itoa(i, 8));
                 break;
             }
             case 's': {
                 char* str = va_arg(args, char*);
-                print(str);
+                puts(str);
                 i+=strlen(str);
                 break;
             }
@@ -265,7 +272,7 @@ void printf(char* fmt, ...) {
                 i++;
                 break;
             }
-            }
+	    }
         } else {
             putc(*p);
             i++;
@@ -282,7 +289,9 @@ void panic(char *fmt, ...) {
     set_color(0x1f);
     clear();
 
-    for(int i = 0; i < 25/2; i++) putln();
+    printf("Litrix Kernel Dump:\n");
+    printf("\tCurrent Syscall: %d\n", sysc_read());
+    for(int i = 0; i < (25/2)-2; i++) putln();
     for(int i = 0; i < (80/2)-(strlen(fmt)/2)-2; i++) putc(' ');
 
     //PRINTF_BEGIN
@@ -306,34 +315,34 @@ void panic(char *fmt, ...) {
             }
             case 'd': {
                 unsigned int i = va_arg(args, int);
-                print(itoa(i, 10));
+                puts(itoa(i, 10));
                 i+=strlen(itoa(i, 10));
                 break;
             }
             case 'x': {
                 unsigned int i = va_arg(args, int);
-                print("0x");
-                print(itoa(i, 16));
+                puts("0x");
+                puts(itoa(i, 16));
                 i+=strlen(itoa(i, 16));
                 break;
             }
             case 'p': {
                 unsigned int i = (unsigned int)va_arg(args, void*);
-                print("0x");
-                print(itoa(i, 16));
+                puts("0x");
+                puts(itoa(i, 16));
                 i+=strlen(itoa(i, 16));
                 break;
             }
             case 'o': {
                 unsigned int i = va_arg(args, unsigned int);
-                print("0o");
-                print(itoa(i, 8));
+                puts("0o");
+                puts(itoa(i, 8));
                 i+=strlen(itoa(i, 8));
                 break;
             }
             case 's': {
                 char* str = va_arg(args, char*);
-                print(str);
+                puts(str);
                 i+=strlen(str);
                 break;
             }
@@ -354,7 +363,7 @@ void panic(char *fmt, ...) {
     //PRINTF_END
 
     set_cursor(1000000);
-    asm volatile("hlt");
+    for(;;) asm volatile("hlt");
 
     va_end(args);
 }

@@ -14,7 +14,7 @@ extern struct process_t *plist[32];
 extern unsigned int cpid;
 
 struct process_t create_process(void (*_begin)(unsigned int *, pid_t),
-                                char name[16]);
+                                char *name);
 pid_t attach_process(struct process_t *proc);
 void detach_process(pid_t pid);
 void detach_all(void);

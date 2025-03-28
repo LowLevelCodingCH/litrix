@@ -1,9 +1,8 @@
-ENTRY(_start)
+ENTRY(_)
 
 SECTIONS
 {
 	. = 80000000;
-	/*	2M; */
 	.text BLOCK(16K) : ALIGN(4K)
 	{
 		*(.multiboot)

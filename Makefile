@@ -62,10 +62,12 @@ make_other:
 	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/syscall.c -o kernel/syscall.o -Iinclude > /dev/null
 	@echo  "CC  kernel/syscall_wrapper.c"
 	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/syscall_wrapper.c -o kernel/syscall_wrapper.o -Iinclude > /dev/null
+	@echo  "AS  kernel/pc.s"
+	@nasm -f elf32 -o kernel/pc.o kernel/pc.s
 
 link:
 	@echo "LD  -o vmlitrix"
-	@ld -melf_i386 -T kernel/linker.ld -o vmlitrix kernel/kentry.o kernel/main.o kernel/lix8/ivt.o kernel/memory.o kernel/stack.o kernel/virtmem.o kernel/keyboard.o kernel/pit.o kernel/cpu.o kernel/disk.o kernel/portio.o kernel/stdout.o kernel/syscall.o kernel/syscall_wrapper.o kernel/scheduler.o kernel/fs/lifs.o kernel/fs/smfs.o kernel/device.o > /dev/null
+	@ld -melf_i386 -T kernel/linker.ld -o vmlitrix kernel/kentry.o kernel/main.o kernel/lix8/ivt.o kernel/memory.o kernel/stack.o kernel/virtmem.o kernel/keyboard.o kernel/pit.o kernel/cpu.o kernel/disk.o kernel/portio.o kernel/stdout.o kernel/syscall.o kernel/syscall_wrapper.o kernel/scheduler.o kernel/pc.o kernel/fs/lifs.o kernel/fs/smfs.o kernel/device.o > /dev/null
 
 debugkrn:
 	@echo "DBG -o vmlitrix.asm"

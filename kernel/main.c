@@ -1,5 +1,7 @@
 #include <litrix/preverror.h>
 
+#include <litrix/typedef.h>
+
 #include <litrix/stdarg.h>
 
 #include <litrix/portio.h>
@@ -8,6 +10,7 @@
 #include <litrix/pit.h>
 
 #include <litrix/cpu.h>
+#include <litrix/pc.h>
 
 #include <litrix/memory.h>
 #include <litrix/stack.h>
@@ -36,87 +39,74 @@
 #define DESCEND "Nitrix"
 #define KERNEL "xk"
 
-struct vm_map vr_mmap = {0};
-struct heap_t heap = {0};
+struct vm_map    vr_mmap = {0};
+struct heap_t    heap    = {0};
+
+struct dev_t     tty     = {0};
+struct dev_t     ide     = {0};
+
+struct process_t root    = {0};
+struct process_t dev_hnd = {0};
+
+int root_pid = 0;
+
 char heap_adr[MEMAMOUNT*512];
 char *stack = NULL;
-
-struct process_t root = {0};
-struct process_t dev_hnd = {0};
 
 char c = 0;
 
 void root_func(unsigned int *esp, pid_t pid) {
-    if(pid != 0) return;
+    if(pid != 0) panic("WHAT FUCKER PUT ANOTHER PROCESS BEFORE ROOT???\n");
 
     sysc_fde();
 
-    c = read();
-
-    putc(c);
+    keyboard_handler();
+    putc(cchar);
 
     if(cursor >= (79*25)*2) clear();
 }
 
-void device_step(unsigned int *esp, pid_t pid) {
-}
-
-int main(unsigned int stack_top) {
+int m(unsigned int stack_top) {
     set_color(0xf0);
     clear();
-    printf("xk7 is booting..\n");
+    puts("xk7 is booting..\n");
 
-    printf("Setting the Stack\n");
     stack = (char*)(stack_top - STACK_SIZE);
-
-    printf("Initializing the Stack\n");
     stack_init(stack);
-
-    printf("Initializing the Heap\n");
     heap_init(&heap, heap_adr);
-
-    printf("Initializing Virtual Memory\n");
     vm_init_map(&vr_mmap);
-
-    printf("Initializing ATA device\n");
     init_ata();
-
-    printf("Initializing keyboard\n");
     init_keyboard();
 
-    printf("Clearing syscall\n");
-    sysc_set(0, 0, 0);
+    sysc_set(0, 0, 0, 0);
     sysc_clrf();
+    sysc_clret();
 
-    printf("Clearing registers: fs, gs, eax\n");
     w_gs(0);
     w_fs(0);
     w_eax(0);
 
-    printf("Initializing lifs\n");
     lifs_ctl();
 
-    printf("Creating process: root\n");
-    root = create_process(root_func, "root\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+    root = create_process(root_func, "root");
+    root_pid = attach_process(&root);
 
-    printf("Assigning process: root\n");
-    pid_t root_pid = attach_process(&root);
+    lifs_creat("dev.tty0");
+    lifs_creat("dev.ide0");
 
-    char nbuf[512*LIFS_BLOCKS] = {0};
+    init_dev(&tty, "dev.tty0" , OUTPUT, READ_WRITE);
+    init_dev(&ide, "dev.ide", BLOCK_ATA, READ_WRITE);
 
-    char *ok = "Hallo welt\n";
+    lifs_creat("kbd.lay::DE_ch@lower");
+    lifs_creat("kbd.lay::DE_ch@upper");
 
-    lifs_creat("Hallo.text");
-    lifs_creat("Tschu.text");
-    lifs_ctl();
-    lifs_write("Hallo.text", ok );
-    lifs_read ("Hallo.text", nbuf);
-
-
-    printf(nbuf);
-    asm("hlt");
+    lifs_write("kbd.lay::DE_ch@lower", 256, (char*)lowercase);
+    lifs_write("kbd.lay::DE_ch@upper", 256, (char*)uppercase);
 
     scheduler();
+
+    while(true)
+        asm("hlt");
 
     return 0;
 }

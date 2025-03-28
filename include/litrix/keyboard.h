@@ -3,5 +3,8 @@
 
 extern char cchar;
 
+extern unsigned char uppercase[256];
+extern unsigned char lowercase[256];
+
 void init_keyboard(void);
 void keyboard_handler(void);

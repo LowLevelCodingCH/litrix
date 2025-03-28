@@ -9,13 +9,11 @@
  */
 
 struct inode lifs_inodes[LIFS_MAX_FILES] = {0};
-lba_t biggest_adr = LIFS_MAX_FILES * LIFS_BLOCKS;
-lba_t last_biggest_adr = LIFS_MAX_FILES * LIFS_BLOCKS;
+lba_t biggest_adr = LIFS_MAX_FILES + 5;
+lba_t last_biggest_adr = LIFS_MAX_FILES + 5;
 int taken_inode_spaces = 1;
 
 void lifs_ctl(void) {
-    biggest_adr = LIFS_MAX_FILES * LIFS_BLOCKS;
-    last_biggest_adr = LIFS_MAX_FILES * LIFS_BLOCKS;
     char buf[512] = {0};
 
     for(int i = 0; i < LIFS_MAX_FILES; i++) {
@@ -111,27 +109,26 @@ void lifs_iread(struct inode *inod, char *buffer) {
         for(int j = 0; j < 512; j++) buffer[(i * 512) + j] = buf[i][j];
 }
 
-void lifs_blk_iwrite(struct inode *inod, char *buffer, unsigned int amount, unsigned int blkadr) {
+void lifs_blk_iwrite(struct inode *inod, char *buffer, unsigned int blkadr) {
     char buf[512] = {0};
 
     lba_t lba = inod->blocks[blkadr];
 
-    for(int i = 0; i < amount; i++) buf[i] = buffer[i];
+    for(int i = 0; i < strlen(buffer); i++) buf[i] = buffer[i];
 
     ata_write_sector(lba, buf);
 
     lifs_ctl();
 }
 
-void lifs_iwrite(struct inode *inod, unsigned int amount, char *buffer) {
-    if(amount > LIFS_BLOCKS*512) panic("[lifs] Error. I dont rlly care enough to tell ya.\n");
-
-    if(amount % 512 == 0)
-        for(int i = 0; i < amount / 512; i++)
-            lifs_blk_iwrite(inod, buffer, amount, i);
-    else
-        for(int i = 0; i < ((amount / 512) + 1); i++) 
-            lifs_blk_iwrite(inod, buffer, amount, 0);
+void lifs_iwrite(struct inode *inod, char *buffer) {
+    if(strlen(buffer) <= 512) {
+        lifs_blk_iwrite(inod, buffer, 0);
+        return;
+    } else {
+        printf("[lifs] Writing buffers longer than one block (512 bytes) is not yet implemented\n");
+        return;
+    }
 }
 
 
@@ -146,12 +143,12 @@ void lifs_read(char *name, char *buffer) {
     printf("[lifs] Cannot find file: %s\n", name);
 }
 
-void lifs_write(char *name, unsigned int amount, char *buffer) {
+void lifs_write(char *name, char *buffer) {
     lifs_ctl();
 
     for(int i = 0; i < LIFS_MAX_FILES; i++) {
         if(strcmp(lifs_inodes[i].name, name) == 0) {
-            lifs_iwrite(&lifs_inodes[i], amount, buffer);
+            lifs_iwrite(&lifs_inodes[i], buffer);
             return;
         }
     }

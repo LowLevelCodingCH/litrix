@@ -25,7 +25,7 @@ void lifs_ctl(void) {
 
         lifs_inodes[i].size = ((unsigned int*)(buf))[LIFS_BLOCKS];
 
-	if(lifs_inodes[i].size != 0) {
+        if(lifs_inodes[i].size != 0) {
             for(int j = 0; j < LIFS_BLOCKS; j++) {
                 lifs_inodes[i].blocks[j] = ((lba_t*)(buf))[j];
                 if(last_biggest_adr < lifs_inodes[i].blocks[j]) {

@@ -44,7 +44,7 @@ void lifs_ctl(void) {
     }
 }
 
-void lifs_creat(char *name) {
+void lifs_creat(const char *name) {
     lba_t block0 = 0;
     lba_t block1 = 0;
     lba_t block2 = 0;
@@ -145,7 +145,7 @@ void lifs_iwrite(struct inode *inod, unsigned int amount, char *buffer) {
 }
 
 
-void lifs_read(char *name, char *buffer) {
+void lifs_read(const char *name, char *buffer) {
     for(int i = 0; i < LIFS_MAX_FILES; i++) {
         if(strcmp(lifs_inodes[i].name, name) == 0) {
             lifs_iread(&lifs_inodes[i], buffer);
@@ -156,7 +156,7 @@ void lifs_read(char *name, char *buffer) {
     printf("[lifs] Cannot find file: %s\n", name);
 }
 
-void lifs_write(char *name, unsigned int amount, char *buffer) {
+void lifs_write(const char *name, unsigned int amount, char *buffer) {
     lifs_ctl();
 
     for(int i = 0; i < LIFS_MAX_FILES; i++) {

@@ -12,8 +12,8 @@ void set_cursor(unsigned int i);
 
 void set_color(unsigned char c);
 
-unsigned int strlen(char *s);
-unsigned char strcmp(char *s1, char *s2);
+unsigned int strlen(const char *s);
+unsigned char strcmp(const char *s1, const char *s2);
 
 void mmio_vga_putc(unsigned char c);
 
@@ -25,6 +25,7 @@ void putln(void);
 
 void print(char *s);
 void puts(char *s);
+void putl(long int *s);
 void print_len(char *s, unsigned int n);
 void println(char *s);
 

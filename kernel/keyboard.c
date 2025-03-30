@@ -8,7 +8,7 @@ int caps_lock;
 char cchar;
 
 unsigned char lowercase[256] = {
-    1, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '0', '2', 0x05, '\t',
+    1, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 225, '2', 0x05, '\t',
     'q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', '[', ']', '\n', 0x02, 'a', 's',
     'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 1, '#', 'y', 'x', 'c', 'v',
     'b', 'n', 'm', ',', '.', '/', 0xFD, '*', 0x03, ' ',
@@ -36,11 +36,10 @@ void keyboard_handler(void) {
 
     unsigned char scancode = inb(KEYBOARD_DATA);
 
-    if(scancode == 0x2A) {
+    if(scancode == 0x2A)
         shift_pressed = 1;
-    } else if(scancode == 0xAA) {
+    else if(scancode == 0xAA)
         shift_pressed = 0;
-    }
 
     cchar = ((scancode & 0x80) ? 0 : (shift_pressed ? uppercase[scancode] : lowercase[scancode]));
 }

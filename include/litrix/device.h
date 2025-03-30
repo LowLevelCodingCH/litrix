@@ -2,6 +2,7 @@ enum dev_type {
     KEYBOARD,
     MOUSE,
     OUTPUT,
+    VIDEO_CARD,
     BLOCK_ATA,
 
     FILE_DESC,    // May be used kind-of but not really

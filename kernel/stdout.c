@@ -7,7 +7,7 @@
 int cursor = 0;
 unsigned char color = 0;
 
-unsigned int strlen(char *s) {
+unsigned int strintlen(long int *s) {
     unsigned int i = 0;
   
     while(*s) {
@@ -19,7 +19,19 @@ unsigned int strlen(char *s) {
     return i;
 }
 
-unsigned char strcmp(char *s1, char *s2) {
+unsigned int strlen(const char *s) {
+    unsigned int i = 0;
+  
+    while(*s) {
+        s++;
+        i++;
+    }
+
+    s-=i;
+    return i;
+}
+
+unsigned char strcmp(const char *s1, const char *s2) {
     if(strlen(s1) != strlen(s2)) return 1;
     return memcmp((void*)s1, (void*)s2, strlen(s1));
 }
@@ -103,6 +115,11 @@ void pmap_io_parallel_putc(unsigned char c) {
     outb(0x378, c);
 }
 
+void putlc(long int c) {
+    *(long int*)(0xb8000 + cursor) = c;
+    cursor += 1;
+}
+
 void putc(unsigned char c) {
     #ifdef VGA
     mmio_vga_putc(c);
@@ -124,6 +141,11 @@ void putln(void) {
 void print(char *s) {
     for(int i = 0; i < strlen(s); i++)
         putc(s[i]);
+}
+
+void putl(long int *s) {
+    for(int i = 0; i < strintlen(s); i++)
+        putlc(s[i]);
 }
 
 void puts(char *s) {
@@ -290,10 +312,6 @@ void panic(char *fmt, ...) {
     clear();
 
     printf("Litrix Kernel Dump:\n");
-    printf("\tCurrent Syscall: %d\n", sysc_read());
-    for(int i = 0; i < (25/2)-2; i++) putln();
-    for(int i = 0; i < (80/2)-(strlen(fmt)/2)-2; i++) putc(' ');
-
     //PRINTF_BEGIN
 
     int i = 0;
@@ -366,4 +384,9 @@ void panic(char *fmt, ...) {
     for(;;) asm volatile("hlt");
 
     va_end(args);
+}
+
+void panerr(void) {
+    printf("Error\n");
+    return;
 }

@@ -9,7 +9,6 @@ struct process_t {
     unsigned char stack[STACK_SIZE];
 };
 
-
 extern struct process_t *plist[32];
 extern unsigned int cpid;
 

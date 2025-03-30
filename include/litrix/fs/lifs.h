@@ -28,9 +28,9 @@ void lifs_blk_iwrite(struct inode *inod, char *buffer, unsigned int amount, unsi
 void lifs_iwrite(struct inode *inod, unsigned int amount, char *buffer);
 
 // Name funcs
-void lifs_read(char *name, char *buffer);
-void lifs_write(char *name, unsigned int amount, char *buffer);
-void lifs_creat(char *name);
+void lifs_read(const char *name, char *buffer);
+void lifs_write(const char *name, unsigned int amount, char *buffer);
+void lifs_creat(const char *name);
 
 // Other funcs
 void lifs_list(void);

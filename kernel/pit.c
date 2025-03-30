@@ -8,8 +8,6 @@ void init_pit(unsigned int frequency) {
     outb(PIT_COMMAND, 0x36);
     outb(PIT_CHANNEL_0, (unsigned char)(divisor & 0xFF));
     outb(PIT_CHANNEL_0, (unsigned char)((divisor >> 8) & 0xFF));
-
-    printf("[pit] Initialized PIT");
 }
 
 void pit_wait(unsigned int milliseconds) {
@@ -20,4 +18,8 @@ void pit_wait(unsigned int milliseconds) {
 
     while (count > 0)
         count--;
+}
+
+void pit_int_setup(void) {
+    
 }

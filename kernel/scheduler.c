@@ -12,7 +12,7 @@ struct process_t create_process(void (*_begin)(unsigned int *, pid_t),
 
     if(strlen(name) > 16) {
         printf("[sched] Process name too long\n");
-        return p;
+        return *(struct process_t*)NULL;
     }
 
     char n[16];
@@ -65,9 +65,8 @@ void detach_process(pid_t pid) {
 }
 
 void detach_all(void) {
-    for(int i = cpid; i > 0; i--) {
+    for(int i = cpid; i > 0; i--)
         detach_process(i);
-    }
     detach_process(0);
 }
 
@@ -90,9 +89,8 @@ void print_process(pid_t pid) {
 }
 
 void list_processes(void) {
-    for(int i = 0; i < cpid; i++) {
+    for(int i = 0; i < cpid; i++)
         printf("pid[%d] : %s , %d , %d\n", plist[i]->pid, plist[i]->name, plist[i]->esp, plist[i]->_begin);
-    }
 }
 
 void sched(void) {

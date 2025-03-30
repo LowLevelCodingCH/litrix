@@ -36,9 +36,13 @@ Siehe mehr bei `include/litrix/fs/smfs.h`.
 
 Es hat auch einen "Scheduler". Es performiert hierbei aber keinen Context-Switch (Kontextaustausch), sondern es ruft einfach eine funktion fürimmer auf. Dumm aber es geht (Nicht).
 Ich werde warscheinlich noch sowas wie Round Robin einbauen.
+
+Ausführbare Dateien werden im Arbeitsspeicher bei Addresse 0 (Dezimal) anfangen.
 ```
 
-## Kommt bald
+## Schon da, aber nicht ganz fertig
 Ausführbare Dateien.
+
+## Kommt bald
 Round Robin Scheduler.
 Context-Switch.

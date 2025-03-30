@@ -5,6 +5,8 @@ void heap_init(struct heap_t *heap, char *heap_adr) {
     if(!heap) return;
     if(!heap_adr) return;
 
+    heap_adr -= 512 * MEMAMOUNT;
+
     for(unsigned int i = 0; i < MEMAMOUNT; i++) {
         heap->blocks[i].size = 0;
         heap->blocks[i].free = 0;

@@ -17,7 +17,6 @@ build:
 	@make make_lix8 --no-print-directory
 	@make link --no-print-directory
 	@make debugkrn --no-print-directory
-	@make makedisk --no-print-directory
 
 make_kentry:
 	@echo "GAS kernel/kentry.s"
@@ -38,10 +37,20 @@ make_other:
 	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/stdout.c -o kernel/stdout.o -Iinclude > /dev/null
 	@echo  "CC  kernel/pit.c"
 	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/pit.c -o kernel/pit.o -Iinclude > /dev/null
+	@echo  "CC  arch/i386/gdt/gdt.c"
+	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c arch/i386/gdt/gdt.c -o arch/i386/gdt/gdt.o -Iinclude > /dev/null
+	@echo  "AS  arch/i386/gdt/gdt.s"
+	@nasm -f elf32 -o arch/i386/gdt/gdt_s.o arch/i386/gdt/gdt.s > /dev/null
+	@echo  "CC  arch/i386/idt/idt.c"
+	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c arch/i386/idt/idt.c -o arch/i386/idt/idt.o -Iinclude > /dev/null
+	@echo  "AS  arch/i386/idt/idt.s"
+	@nasm -f elf32 -o arch/i386/idt/idt_s.o arch/i386/idt/idt.s > /dev/null
 	@echo  "CC  kernel/cpu.c"
 	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/cpu.c -o kernel/cpu.o -Iinclude > /dev/null
 	@echo  "CC  kernel/disk.c"
 	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/disk.c -o kernel/disk.o -Iinclude > /dev/null
+	@echo  "CC  kernel/lxpi.c"
+	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/lxpi.c -o kernel/lxpi.o -Iinclude > /dev/null
 	@echo  "CC  kernel/fs/smfs.c"
 	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/fs/smfs.c -o kernel/fs/smfs.o -Iinclude > /dev/null
 	@echo  "CC  kernel/fs/lifs.c"
@@ -60,6 +69,10 @@ make_other:
 	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/scheduler.c -o kernel/scheduler.o -Iinclude > /dev/null
 	@echo  "CC  kernel/syscall.c"
 	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/syscall.c -o kernel/syscall.o -Iinclude > /dev/null
+	@echo  "CC  kernel/shell.c"
+	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/shell.c -o kernel/shell.o -Iinclude > /dev/null
+	@echo  "CC  kernel/execve.c"
+	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/execve.c -o kernel/execve.o -Iinclude > /dev/null
 	@echo  "CC  kernel/syscall_wrapper.c"
 	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/syscall_wrapper.c -o kernel/syscall_wrapper.o -Iinclude > /dev/null
 	@echo  "AS  kernel/pc.s"
@@ -67,7 +80,7 @@ make_other:
 
 link:
 	@echo "LD  -o vmlitrix"
-	@ld -melf_i386 -T kernel/linker.ld -o vmlitrix kernel/kentry.o kernel/main.o kernel/lix8/ivt.o kernel/memory.o kernel/stack.o kernel/virtmem.o kernel/keyboard.o kernel/pit.o kernel/cpu.o kernel/disk.o kernel/portio.o kernel/stdout.o kernel/syscall.o kernel/syscall_wrapper.o kernel/scheduler.o kernel/pc.o kernel/fs/lifs.o kernel/fs/smfs.o kernel/device.o > /dev/null
+	@ld -melf_i386 -T kernel/linker.ld -o vmlitrix kernel/kentry.o kernel/main.o kernel/lix8/ivt.o arch/i386/idt/idt_s.o arch/i386/idt/idt.o arch/i386/gdt/gdt_s.o arch/i386/gdt/gdt.o kernel/memory.o kernel/stack.o kernel/virtmem.o kernel/keyboard.o kernel/pit.o kernel/cpu.o kernel/disk.o kernel/portio.o kernel/lxpi.o kernel/stdout.o kernel/syscall.o kernel/syscall_wrapper.o kernel/scheduler.o kernel/pc.o kernel/fs/lifs.o kernel/fs/smfs.o kernel/device.o kernel/execve.o kernel/shell.o > /dev/null
 
 debugkrn:
 	@echo "DBG -o vmlitrix.asm"
@@ -85,6 +98,9 @@ clean:
 	@rm kernel/lix8/*.o > /dev/null
 	@rm kernel/fs/*.o > /dev/null
 	@rm vmlitrix* > /dev/null
+
+test_gdb:
+	@qemu-system-i386 -debugcon stdio -m 128M -M pc -kernel vmlitrix -drive file=disk.dimg,if=ide,media=disk,format=raw -S -s
 
 test:
 	@qemu-system-i386 -debugcon stdio -m 128M -M pc -kernel vmlitrix -drive file=disk.dimg,if=ide,media=disk,format=raw

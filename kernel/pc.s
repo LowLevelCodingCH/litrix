@@ -15,3 +15,7 @@ r_pc:               ; doesnt work
 r_pc_imm:
     pop eax
     ret
+
+testexec:
+    mov [0xb8000], byte 'a'
+    ret

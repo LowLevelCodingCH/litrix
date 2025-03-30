@@ -25,9 +25,12 @@ litrix/xk7   (17) 17. Jetzige Version. Zweitmeiste Features (Krasser code. Ähnl
 ## Features
 ```
 Litrix, wie jedes Betriebssystem (hoffe ich mal), hat ein Syscall interface.
-Dieser wird via schreiben zur Adresse 0x1dddddd gewählt.
-Nach dem muss man auf 0x1ffffff eine 1 schreiben, sodass der Kernel weiss, dass es etwas zutun hat.
-Was der Kernel danach wieder rausspuckt geht in die Addresse 0x1dddddd.
+Ähnlich wie bei LiNUX aufgebaut ist es:
+eax: nummer
+ebx: parameter 0
+ecx: parameter 1
+edx: parameter 2
+In alphabetischer Reihenfolge.
 
 Auch ein Dateisystem unterstützt der Kernel, LiFS, Litrix Datei System.
 Dieses benutzt iNodes. Siehe mehr bei `include/litrix/fs/lifs.h`.

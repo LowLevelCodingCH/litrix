@@ -304,6 +304,32 @@ void printf(char* fmt, ...) {
     va_end(args);
 }
 
+void print_log_OK(char *str) {
+    set_color(0x07);
+    puts("[  ");
+    set_color(0x02);
+    puts("OK");
+    set_color(0x07);
+    puts("  ] ");
+    set_color(0x0f);
+    puts(str);
+    set_color(0x07);
+    putc('\n');
+}
+
+void print_log_FAILED(char *str) {
+    set_color(0x07);
+    puts("[");
+    set_color(0x04);
+    puts("FAILED");
+    set_color(0x07);
+    puts("] ");
+    set_color(0x0f);
+    puts(str);
+    set_color(0x07);
+    putc('\n');
+}
+
 void panic(char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -312,6 +338,9 @@ void panic(char *fmt, ...) {
     clear();
 
     printf("Litrix Kernel Dump:\n");
+    for(int i = 0; i < (25/2)-1; i++) putln();
+    for(int i = 0; i < (80 - strlen(fmt)) / 2; i++) putc(' ');
+
     //PRINTF_BEGIN
 
     int i = 0;

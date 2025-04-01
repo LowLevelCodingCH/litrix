@@ -2,6 +2,7 @@
 #include <litrix/memory.h>
 #include <litrix/disk.h>
 #include <litrix/fs/lifs.h>
+#include <litrix/fs/fd.h>
 
 /*
  * Litrix FS
@@ -17,57 +18,45 @@ void lifs_ctl(void) {
     biggest_adr = LIFS_MAX_FILES * LIFS_BLOCKS;
     last_biggest_adr = LIFS_MAX_FILES * LIFS_BLOCKS;
     char buf[512] = {0};
+    int real_i = 0;
 
     for(int i = 0; i < LIFS_MAX_FILES; i++) {
         memset(buf, 0, 512);
 
         ata_read_sector(i, buf);
 
-        lifs_inodes[i].size = ((unsigned int*)(buf))[LIFS_BLOCKS];
+        lifs_inodes[i].blocks[0] = ((unsigned int*)(buf))[0];
 
-        if(lifs_inodes[i].size != 0) {
+        if(lifs_inodes[i].blocks[0] != 0) {
             for(int j = 0; j < LIFS_BLOCKS; j++) {
-                lifs_inodes[i].blocks[j] = ((lba_t*)(buf))[j];
-                if(last_biggest_adr < lifs_inodes[i].blocks[j]) {
-                    biggest_adr = lifs_inodes[i].blocks[j];
-                    last_biggest_adr = lifs_inodes[i].blocks[j];
+                lifs_inodes[real_i].blocks[j] = ((lba_t*)(buf))[j];
+                if(last_biggest_adr < lifs_inodes[real_i].blocks[j]) {
+                    biggest_adr = lifs_inodes[real_i].blocks[j] + 1;
+                    last_biggest_adr = lifs_inodes[real_i].blocks[j];
                 }
             }
 
             if(lifs_inodes[i].blocks[0] != 0) taken_inode_spaces++;
 
             for(int j = 0; j < 128; j++)
-                lifs_inodes[i].name[j] = buf[4 * LIFS_BLOCKS + 4 + j];
+                lifs_inodes[real_i].name[j] = buf[4 * LIFS_BLOCKS + 4 + j];
 
-            memset(lifs_inodes[i].resv, 0, LIFS_RESV);
+            memset(lifs_inodes[real_i].resv, 0, LIFS_RESV);
+            real_i++;
         }
     }
 }
 
 void lifs_creat(const char *name) {
-    lba_t block0 = 0;
-    lba_t block1 = 0;
-    lba_t block2 = 0;
-    lba_t block3 = 0;
-    lba_t block4 = 0;
-
     char nam[128];
     memset(nam, 0, 128);
-
-    block0 = biggest_adr + 1;
-    block1 = biggest_adr + 2;
-    block2 = biggest_adr + 3;
-    block3 = biggest_adr + 4;
-    block4 = biggest_adr + 5;
 
     char blockdat[512] = {0};
     struct inode inod = {0};
 
-    inod.blocks[0] = block0;
-    inod.blocks[1] = block1;
-    inod.blocks[2] = block2;
-    inod.blocks[3] = block3;
-    inod.blocks[4] = block4;
+    for(int i = 0; i < LIFS_BLOCKS; i++)
+        inod.blocks[i] = biggest_adr + i;
+
     inod.size = 512*LIFS_BLOCKS;
 
     if(strlen(name) <= 128) {
@@ -78,11 +67,9 @@ void lifs_creat(const char *name) {
         return;
     }
 
-    ((int*)(blockdat))[0] = inod.blocks[0];
-    ((int*)(blockdat))[1] = inod.blocks[1];
-    ((int*)(blockdat))[2] = inod.blocks[2];
-    ((int*)(blockdat))[3] = inod.blocks[3];
-    ((int*)(blockdat))[4] = inod.blocks[4];
+    for(int i = 0; i < LIFS_BLOCKS; i++)
+        ((int*)(blockdat))[i] = inod.blocks[i];
+
     ((int*)(blockdat))[LIFS_BLOCKS] = inod.size;
 
     for(int i = 0; i < 128; i++)
@@ -91,6 +78,12 @@ void lifs_creat(const char *name) {
     ata_write_sector(taken_inode_spaces - 1, blockdat);
 
     lifs_ctl();
+}
+
+void lifs_print_av_blocks(struct inode *inod) {
+    printf("Blocks for file: %s\n", inod->name);
+    for(int i = 0; i < LIFS_BLOCKS; i++)
+        printf("Block %d: %d\n", i, inod->blocks[i]);
 }
 
 void lifs_iread(struct inode *inod, char *buffer) {
@@ -172,5 +165,35 @@ void lifs_write(const char *name, unsigned int amount, char *buffer) {
 
 void lifs_list(void) {
     for(int i = 0; i < LIFS_MAX_FILES; i++)
-        if(strcmp(lifs_inodes[i].name, "") != 0) printf("%s\n", lifs_inodes[i].name);
+        if(strcmp(lifs_inodes[i].name, "") != 0) printf("%s, %d\n", lifs_inodes[i].name, i);
+}
+
+int lifs_open(const char *name) {
+    lifs_ctl();
+
+    int i = 0;
+
+    for(i = 0; i < LIFS_MAX_FILES; i++)
+        if(strcmp(lifs_inodes[i].name, name) == 0) goto cont;
+
+cont:
+    memcpy(file_ds[newest_fd], lifs_inodes[i].name, strlen(lifs_inodes[i].name));
+    newest_fd++;
+
+    return newest_fd - 1;
+}
+
+void lifs_close(int fd) {
+    char b[128];
+    memset(b, 0, 128);
+    memcpy(file_ds[fd], b, 128);
+    newest_fd--;
+}
+
+void lifs_fwrite(int fd, unsigned int amount, char *buffer) {
+    lifs_write(file_ds[fd], amount, buffer);
+}
+
+void lifs_fread(int fd, char *buffer) {
+    lifs_read(file_ds[fd], buffer);
 }

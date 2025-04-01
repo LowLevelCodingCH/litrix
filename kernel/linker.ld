@@ -1,4 +1,4 @@
-ENTRY(_)
+ENTRY(_start)
 
 SECTIONS
 {

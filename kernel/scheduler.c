@@ -64,6 +64,13 @@ void detach_process(pid_t pid) {
     cpid--;
 }
 
+int fork_process(pid_t pid) {
+    struct process_t p = *plist[pid];
+    int pa = (int)&p;
+    memcpy((char*)0x10000, (char*)pa, sizeof(p));
+    return attach_process((struct process_t*)0x10000);
+}
+
 void detach_all(void) {
     for(int i = cpid; i > 0; i--)
         detach_process(i);

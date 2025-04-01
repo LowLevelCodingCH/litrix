@@ -4,7 +4,8 @@
 #include <litrix/stdout.h>
 
 void init_dev(struct dev_t *dev, char *fname,
-              enum dev_type type, enum dev_perms perms) {
+              enum dev_type type, enum dev_perms perms,
+              void (*flush)(struct dev_t *)) {
     if(strlen(fname) > 128) {
         printf("[device] File name too long\n");
         return;
@@ -13,6 +14,7 @@ void init_dev(struct dev_t *dev, char *fname,
     memcpy(dev->file, fname, strlen(fname));
     dev->perms = perms;
     dev->type = type;
+    dev->flush = flush;
 }
 
 void read_dev(struct dev_t *dev, char *buf) {
@@ -27,4 +29,8 @@ void write_dev(struct dev_t *dev, unsigned int amount, char *buf) {
         lifs_write(dev->file, amount, buf);
     else
         printf("[dev] Unallowed write to device: %s\n", dev->file);
+}
+
+void flush_dev(struct dev_t *dev) {
+    dev->flush(dev);
 }

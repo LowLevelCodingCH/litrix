@@ -38,6 +38,9 @@ void printf(char* fmt, ...);
 
 void panic(char *fmt, ...);
 
+void print_log_OK(char *str);
+void print_log_FAILED(char *str);
+
 #define LITRIX_LOG  "log  : "
 #define LITRIX_WARN "warn : "
 #define LITRIX_ERR  "err  : "

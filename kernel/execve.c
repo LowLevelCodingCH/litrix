@@ -1,6 +1,7 @@
 #include <litrix/stack.h>
 #include <litrix/stdout.h>
 #include <litrix/fs/lifs.h>
+#include <litrix/fs/wrap_inc.h>
 #include <litrix/syscall.h>
 #include <litrix/memory.h>
 #include <litrix/execve.h>
@@ -31,7 +32,9 @@ int execve(const char *pathname, char *const _Nullable argv[],
     char fildat[512 * LIFS_BLOCKS];
     memset(fildat, 0, 512 * LIFS_BLOCKS);
 
-    lifs_read(pathname, fildat);
+    int fd = open(pathname);
+
+    read(fd, fildat);
 
     memcpy((void*)0, (void*)(fildat + 4), 512 * LIFS_BLOCKS);
 
@@ -43,6 +46,8 @@ int execve(const char *pathname, char *const _Nullable argv[],
     bprm.magic[3] = fildat[3];
 
     bprm.prog = (char*)(0);
+
+    close(fd);
 
     return exec_bprm(&bprm);
 }

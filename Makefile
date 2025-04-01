@@ -31,10 +31,10 @@ make_lix8:
 	@gcc  -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/lix8/ivt.c -o kernel/lix8/ivt.o -Iinclude > /dev/null
 
 make_other:
-	@echo  "CC  kernel/keyboard.c"
-	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/keyboard.c -o kernel/keyboard.o -Iinclude > /dev/null
 	@echo  "CC  kernel/stdout.c"
 	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/stdout.c -o kernel/stdout.o -Iinclude > /dev/null
+	@echo  "CC  device/ps2kbd.c"
+	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c device/ps2kbd.c -o device/ps2kbd.o -Iinclude > /dev/null
 	@echo  "CC  kernel/pit.c"
 	@gcc  -fno-builtin-memcpy -O0 -nostdlib -nodefaultlibs -ffreestanding -m32 -g -c kernel/pit.c -o kernel/pit.o -Iinclude > /dev/null
 	@echo  "CC  arch/i386/gdt/gdt.c"
@@ -80,7 +80,7 @@ make_other:
 
 link:
 	@echo "LD  -o vmlitrix"
-	@ld -melf_i386 -T kernel/linker.ld -o vmlitrix kernel/kentry.o kernel/main.o kernel/lix8/ivt.o arch/i386/idt/idt_s.o arch/i386/idt/idt.o arch/i386/gdt/gdt_s.o arch/i386/gdt/gdt.o kernel/memory.o kernel/stack.o kernel/virtmem.o kernel/keyboard.o kernel/pit.o kernel/cpu.o kernel/disk.o kernel/portio.o kernel/lxpi.o kernel/stdout.o kernel/syscall.o kernel/syscall_wrapper.o kernel/scheduler.o kernel/pc.o kernel/fs/lifs.o kernel/fs/smfs.o kernel/device.o kernel/execve.o kernel/shell.o > /dev/null
+	@ld -melf_i386 -T kernel/linker.ld -o vmlitrix kernel/kentry.o kernel/main.o kernel/lix8/ivt.o arch/i386/idt/idt_s.o arch/i386/idt/idt.o arch/i386/gdt/gdt_s.o arch/i386/gdt/gdt.o kernel/memory.o kernel/stack.o kernel/virtmem.o kernel/pit.o kernel/cpu.o kernel/disk.o kernel/portio.o kernel/lxpi.o kernel/stdout.o kernel/syscall.o kernel/syscall_wrapper.o kernel/scheduler.o kernel/pc.o kernel/fs/lifs.o kernel/fs/smfs.o kernel/device.o device/ps2kbd.o kernel/execve.o kernel/shell.o > /dev/null
 
 debugkrn:
 	@echo "DBG -o vmlitrix.asm"
@@ -89,11 +89,13 @@ debugkrn:
 	@objdump -t vmlitrix > vmlitrix.sym
 
 makedisk:
-	@echo "AS  -o disk.dimg"
-	@nasm -fbin -o disk.dimg disk.s
+	@echo "FAL -o disk.dimg"
+	@fallocate -l 1G disk.dimg
 
 clean:
 	@rm disk.dimg > /dev/null
+	@rm device/*.o > /dev/null
+	@rm arch/*/*/*.o > /dev/null
 	@rm kernel/*.o > /dev/null
 	@rm kernel/lix8/*.o > /dev/null
 	@rm kernel/fs/*.o > /dev/null

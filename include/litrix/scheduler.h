@@ -16,6 +16,7 @@ struct process_t create_process(void (*_begin)(unsigned int *, pid_t),
                                 char *name);
 pid_t attach_process(struct process_t *proc);
 void detach_process(pid_t pid);
+int fork_process(pid_t pid);
 void detach_all(void);
 void step_process(pid_t pid);
 void step_processes(void);

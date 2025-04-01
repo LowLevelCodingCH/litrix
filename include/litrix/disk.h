@@ -13,6 +13,8 @@
 #define STATUS_DF		0x20
 #define STATUS_ERR	  0x01
 
+#define MAX_ATA_BSY_TICKS 10000000
+
 void disable_ata_irq(void);
 void ata_wait_bsy(void);
 void ata_wait_drq(void);

@@ -7,11 +7,15 @@ void disable_ata_irq(void) {
 }
 
 void ata_wait_bsy(void) {
-    while (inb(ATA_PRIMARY_IO + 7) & 0x80);
+    static int t = 0;
+    if(t < 1) printf("[ata] If it hangs here, check if you have a valid ATA/IDE drive installed\n"); 
+    t++;
+
+    while(inb(ATA_PRIMARY_IO + 7) & 0x80);
 }
 
 void ata_wait_drq(void) {
-    while (!(inb(ATA_PRIMARY_IO + 7) & 0x08));
+    while((!(inb(ATA_PRIMARY_IO + 7) & 0x08)));
 }
 
 void ata_select_drive(unsigned char drive) {
@@ -72,7 +76,7 @@ unsigned char ata_disk_status(void) {
 }
 
 unsigned char init_ata(void) {
-    disable_ata_irq();
+    //disable_ata_irq();
     ata_select_drive(0);
 
     return ata_disk_status();

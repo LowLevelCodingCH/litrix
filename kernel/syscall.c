@@ -3,6 +3,7 @@
 #include <litrix/lxpi.h>
 #include <litrix/fs/lifs.h>
 #include <litrix/execve.h>
+#include <litrix/typedef.h>
 #include <litrix/stack.h>
 #include <litrix/scheduler.h>
 #include <litrix/fs/wrap_inc.h>
@@ -24,9 +25,6 @@ void syscall_hnd(void) {
         case SYS_OPEN: eax = open((char*)ebx); break;
         case SYS_CLOSE: close(ebx); break;
         case SYS_CREAT: creat((char*)ebx); break;
-
-        case SYS_FORK: eax = fork_process(ebx); break;
-        case SYS_KILL: detach_process(ebx); break;
 
         case SYS_SHUTDOWN: shutdown(); break;
         case SYS_PRINT: print_len((char*)ebx, ecx); break;

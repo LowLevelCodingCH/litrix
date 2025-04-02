@@ -4,6 +4,7 @@
 #include <litrix/stack.h>
 #include <litrix/memory.h>
 #include <litrix/syscall.h>
+#include <litrix/typedef.h>
 #include <litrix/scheduler.h>
 #include <litrix/virtmem.h>
 
@@ -17,8 +18,6 @@ void shutdown(void) {
     clear();
 
     lifs_ctl();
-
-    detach_all();
 
     stack_init(stack);
     vm_init_map(&vr_mmap);

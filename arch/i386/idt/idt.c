@@ -1,8 +1,11 @@
 #include <litrix/i386/idt.h>
 #include <litrix/syscall.h>
+#include <litrix/typedef.h>
 #include <litrix/stack.h>
 #include <litrix/scheduler.h>
 #include <litrix/stdout.h>
+#include <litrix/pc.h>
+#include <litrix/cpu.h>
 #include <litrix/portio.h>
 
 #define PIC_MASTER_CMD 0x20
@@ -35,25 +38,25 @@ void i386_idt_disablegate(int interrupt) {
 }
 
 char *exception_msgs[32] = {
-    "Division by zero\n",
+    "[FAULT] Division by zero\n",
+    "[INTER] Debug\n",
     RESV_ERROR,
     RESV_ERROR,
     RESV_ERROR,
     RESV_ERROR,
+    "[FAULT] Invalid opcode at: %d\n",
     RESV_ERROR,
-    "Invalid opcode\n",
-    RESV_ERROR,
-    RESV_ERROR,
-    RESV_ERROR,
+    "[FATAL] Double fault",
     RESV_ERROR,
     RESV_ERROR,
     RESV_ERROR,
     RESV_ERROR,
+    "[FAULT] General protection fault\n",
     RESV_ERROR,
     RESV_ERROR,
     RESV_ERROR,
     RESV_ERROR,
-    RESV_ERROR,
+    "[FATAL] Machine check",
     RESV_ERROR,
     RESV_ERROR,
     RESV_ERROR,
@@ -70,14 +73,55 @@ char *exception_msgs[32] = {
 };
 
 void div_by_zero(void) {
-    panic(exception_msgs[0]);
-    detach_process(cpid);
+    int eip = 0;
+    asm("movl %%eax, %0" : "=a" (eip));
+
+    //TODO: DOND WORK PLS FIXXXS
+    eip = r_pc();
+
+    printf(exception_msgs[0]);
+    // only handles `int X = Y / 0;`
+    //              (16 bytes)
+    eip += 16;
+    w_eax(eip);
+    w_pc(1);
     return;
 }
 
 void invalid_opc(void) {
-    panic(exception_msgs[6]);
-    detach_process(cpid);
+    int eip = 0;
+    asm("movl %%eax, %0" : "=a" (eip));
+
+    printf(exception_msgs[6], eip);
+    // only handles `asm("ud2");` and some more like "syscall"....
+    //              (2 bytes)
+    eip += 2;
+    w_eax(eip);
+    w_pc(1);
+    return;
+}
+
+void debug_exc(void) {
+    printf(exception_msgs[1]);
+    return;
+}
+
+void machine_check(void) {
+    panic(exception_msgs[18]);
+    while(1) asm("hlt");
+}
+
+void double_fault(void) {
+    panic(exception_msgs[8]);
+    while(1) asm("hlt");
+}
+
+void gen_prot_fault(void) {
+    int eip = 0;
+    asm("movl %%eax, %0" : "=a" (eip));
+
+    printf(exception_msgs[13], eip);
+    asm("hlt"); // though
     return;
 }
 
@@ -90,8 +134,13 @@ void kbhnd(void) {
 void default_hnd(void);
 void syscall_hand(void);
 void kbd_hnd(void);
+
 void exc0(void);
+void exc1(void);
 void exc6(void);
+void exc8(void);
+void exc13(void);
+void exc18(void);
 
 void pic_init_kbd(void) {
     outb(0x20, 0x11);
@@ -120,9 +169,13 @@ void i386_idt_initialize(void) {
     for(int i = 0; i < 256; i++)
         i386_idt_setgate(i, default_hnd, 0x08, IDT_FLAG_PRESENT | IDT_FLAG_GATE_32BIT_INT);
 
-    i386_idt_setgate(0x0, exc0, 0x08, IDT_FLAG_PRESENT | IDT_FLAG_GATE_32BIT_INT);
-    i386_idt_setgate(0x6, exc6, 0x08, IDT_FLAG_PRESENT | IDT_FLAG_GATE_32BIT_INT);
-    i386_idt_setgate(0x9, kbd_hnd, 0x08, IDT_FLAG_PRESENT | IDT_FLAG_GATE_32BIT_INT);
+    i386_idt_setgate(0x00, exc0,  0x08, IDT_FLAG_PRESENT | IDT_FLAG_GATE_32BIT_INT);
+    i386_idt_setgate(0x01, exc1,  0x08, IDT_FLAG_PRESENT | IDT_FLAG_GATE_32BIT_INT);
+    i386_idt_setgate(0x06, exc6,  0x08, IDT_FLAG_PRESENT | IDT_FLAG_GATE_32BIT_INT);
+    i386_idt_setgate(0x08, exc8,  0x08, IDT_FLAG_PRESENT | IDT_FLAG_GATE_32BIT_INT);
+    i386_idt_setgate(0x0d, exc13, 0x08, IDT_FLAG_PRESENT | IDT_FLAG_GATE_32BIT_INT);
+    i386_idt_setgate(0x12, exc18, 0x08, IDT_FLAG_PRESENT | IDT_FLAG_GATE_32BIT_INT);
+
     i386_idt_setgate(0x20, syscall_hand, 0x08, IDT_FLAG_PRESENT | IDT_FLAG_GATE_32BIT_INT);
 
     pic_init_kbd();

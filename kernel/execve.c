@@ -1,6 +1,7 @@
 #include <litrix/stack.h>
 #include <litrix/stdout.h>
 #include <litrix/fs/lifs.h>
+#include <litrix/typedef.h>
 #include <litrix/fs/wrap_inc.h>
 #include <litrix/syscall.h>
 #include <litrix/memory.h>

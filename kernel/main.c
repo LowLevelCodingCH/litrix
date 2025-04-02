@@ -38,9 +38,6 @@ struct heap_t    heap     = {0};
 struct dev_t     vga_card = {0};
 struct dev_t     ide      = {0};
 
-struct process_t root     = {0};
-struct process_t dev_hnd  = {0};
-
 int root_pid = 0;
 
 char heap_adr[MEMAMOUNT * 512];
@@ -50,18 +47,12 @@ char c = 0;
 char file_ds[128][16] = {0};
 int newest_fd = 0;
 
-void root_func(unsigned int *esp, pid_t pid) {
-    if(pid != 0) panic("WHAT FUCKER PUT ANOTHER PROCESS BEFORE ROOT???\n");
-
-    if(cursor >= (79*25)*2) clear();
-}
-
 // Testing program
 // Syscalls, Prints "Hi\n"
 // Gets loaded at address 0,
 // May get offset when I
 // Change that to be something else
-char testprog[30] = {
+char testprog[6] = {
     // SIGNATURE (MAGIC "XKE.")
     0x58, 0x4b, 0x45, 0x2e,
     // More metadata maybe
@@ -69,14 +60,8 @@ char testprog[30] = {
     //     Where data starts
     // To load more efficiently I guess
     // CODE
-    0xb8, 0x05, 0x00, 0x00, 0x00,  // mov eax, 1  // Syscall number
-    0xbb, 0x17, 0x00, 0x00, 0x00,  // mov ebx, 23 // Arg0
-    0xb9, 0x03, 0x00, 0x00, 0x00,  // mov ecx, 3  // Arg1
-    0xba, 0x00, 0x00, 0x00, 0x00,  // mov edx, 0  // Arg2
-    0xcd, 0x80,                    // int 0x80
+    0xf4,
     0xc3,                          // ret
-    // DATA
-    'H', 'i', 0xa,
 };
 
 int kmain(void) {
@@ -99,7 +84,6 @@ int kmain(void) {
 
     init_ata();
     print_log_OK("Initialized ata device");
-    init_pit(1000);
 
     w_gs(0);
     w_fs(0);
@@ -107,20 +91,28 @@ int kmain(void) {
 
     fsctl();
 
-    root = create_process(root_func, "root");
-    root_pid = attach_process(&root);
-
     creat("dev.ide");
     creat("dev.vgacrd");
     creat("swap");
+    creat("a.xke");
+
+    //int fd = open("a.xke");
+    //write(fd, 11, testprog);
+    //close(fd);
 
     init_dev(&ide,      "dev.ide",    BLOCK_ATA,  READ_WRITE, (void*)NULL);
-    init_dev(&vga_card, "dev.vgacrd", VIDEO_CARD, WRITE, (void*)NULL);
-    
-    asm volatile("int $64");
+    init_dev(&vga_card, "dev.vgacrd", VIDEO_CARD, WRITE, (void*)NULL); 
+    switch_um();
 
-    scheduler();
+    asm volatile("int $0x64");
+    execve("a.xke", NULL, NULL);
+    context c;
 
+    save_context(&c);
+    printf("b\n");
+    load_context(&c);
+
+    while(1);
     shutdown();
 
     return 0;

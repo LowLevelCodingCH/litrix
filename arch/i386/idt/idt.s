@@ -1,14 +1,21 @@
 extern syscall_hnd
 extern div_by_zero
+extern gen_prot_fault
+extern debug_exc
 extern invalid_opc
-extern kbhnd
+extern machine_check
+extern double_fault
 
-global i386_idt_load
-global kbd_hnd
 global exc0
+global exc1
 global exc6
+global exc8
+global exc13
+global exc18
+
 global default_hnd
 global syscall_hand
+global i386_idt_load
 
 i386_idt_load:
     push ebp
@@ -22,49 +29,83 @@ i386_idt_load:
     ret
 
 syscall_hand:
-    pusha
+    pushad
     cli
 
     call syscall_hnd
 
     sti
-    popa
+    popad
     iret
 
 exc0:
-    pusha
+    pushad
     cli
 
     call div_by_zero
 
     sti
-    popa
+    popad
+    iret
+
+exc1:
+    pushad
+    cli
+
+    call debug_exc
+
+    sti
+    popad
     iret
 
 exc6:
-    pusha
+    pop eax
+    pushad
     cli
 
     call invalid_opc
 
     sti
-    popa
+    popad
     iret
 
-kbd_hnd:
-    pusha
+exc8:
+    pop eax
+    pushad
     cli
 
-    call kbhnd
+    call double_fault
 
     sti
-    popa
+    popad
+    iret
+
+exc13:
+    pop eax
+    pushad
+    cli
+
+    call gen_prot_fault
+
+    sti
+    popad
+    iret
+
+exc18:
+    pop eax
+    pushad
+    cli
+
+    call machine_check
+
+    sti
+    popad
     iret
 
 default_hnd:
-    pusha
+    pushad
     cli
 
     sti
-    popa
+    popad
     iret

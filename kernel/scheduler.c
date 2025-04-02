@@ -1,109 +1,50 @@
 #include <litrix/stack.h>
+#include <litrix/cpu.h>
+#include <litrix/pc.h>
+#include <litrix/typedef.h>
 #include <litrix/stdout.h>
 #include <litrix/memory.h>
 #include <litrix/scheduler.h>
 
-struct process_t *plist[32];
-unsigned int cpid = 0;
+void save_context(context *ctx) {
+    asm("cli");
 
-struct process_t create_process(void (*_begin)(unsigned int *, pid_t),
-                                char *name) {
-    struct process_t p;
+    asm("mov -4(%%ebp), %0" : "=a"(ctx->eip));
+    printf("%d\n", ctx->eip);
 
-    if(strlen(name) > 16) {
-        printf("[sched] Process name too long\n");
-        return *(struct process_t*)NULL;
-    }
+    asm("mov %%esp, %0" : "=S"(ctx->esp));
+    asm("mov %%ebp, %0" : "=r"(ctx->ebp));
 
-    char n[16];
+    asm("mov %%eax, %0" : "=a"(ctx->eax));
+    asm("mov %%ebx, %0" : "=b"(ctx->ebx));
+    asm("mov %%ecx, %0" : "=c"(ctx->ecx));
+    asm("mov %%edx, %0" : "=d"(ctx->edx));
 
-    memset(n, 0, 16);
-    memcpy(n, name, strlen(name));
+    asm("mov %%esi, %0" : "=r"(ctx->esi));
+    asm("mov %%edi, %0" : "=r"(ctx->edi));
 
-    p.running = 1;
-    p._begin = _begin;
-    p.esp = (unsigned int)((char*)(p.stack + STACK_SIZE));
-
-    for(int i = 0; i < 16; i++)
-        p.name[i] = n[i];
-
-    return p;
+    asm("sti");
 }
 
-pid_t attach_process(struct process_t *proc) {
-    if(cpid >= 32) return -1;
+void load_context(context *ctx) {
+    asm("cli");
 
-    proc->pid = cpid;
-    plist[proc->pid] = proc;
-    cpid++;
-    return proc->pid;
-}
+    asm("mov %0, %%esp" : : "S"(ctx->esp));
+    asm("mov %0, %%ebp" : : "r"(ctx->ebp));
 
-// See, this uses child-friendly names instead of linux's "kill"
-void detach_process(pid_t pid) {
-    if(!plist[pid]) return;
+    asm("mov %0, %%eax" : : "a"(ctx->eax));
+    asm("mov %0, %%ebx" : : "b"(ctx->ebx));
+    asm("mov %0, %%ecx" : : "c"(ctx->ecx));
+    asm("mov %0, %%edx" : : "d"(ctx->edx));
 
-    printf("[sched] Detached process: `%s`, pid %d\n",
-           plist[pid]->name, plist[pid]->pid);
+    asm("mov %0, %%esi" : : "r"(ctx->esi));
+    asm("mov %0, %%edi" : : "r"(ctx->edi));
 
-    memset((char*)plist[pid]->name, 0, 16);
-    plist[pid]->esp = 0;
-    plist[pid]->running = 0;
-    plist[pid]->_begin = NULL;
+    asm("sti");
 
-    for(int i = 0; i < 32; i++) {
-        if(i >= pid && i < 32) {
-            plist[i] = plist[i + 1];
-            plist[i]->pid = i;
-        }
-    }
-
-    plist[pid] = NULL;
-    plist[31] = NULL;
-
-    cpid--;
-}
-
-int fork_process(pid_t pid) {
-    struct process_t p = *plist[pid];
-    int pa = (int)&p;
-    memcpy((char*)0x10000, (char*)pa, sizeof(p));
-    return attach_process((struct process_t*)0x10000);
-}
-
-void detach_all(void) {
-    for(int i = cpid; i > 0; i--)
-        detach_process(i);
-    detach_process(0);
-}
-
-void step_process(pid_t pid) {
-    if(!plist[pid]) return;
-    if(plist[pid]->running != 1) return;
-
-    plist[pid]->_begin(&plist[pid]->esp, plist[pid]->pid);
-}
-
-void step_processes(void) {
-    for(int i = 0; i < 32; i++)
-        step_process(i);
-}
-
-void print_process(pid_t pid) {
-    printf("pid[%d]:\n\tname: %s\n\tesp: %d\n\t_begin: %d\n\trunning: %d\n\n", plist[pid]->pid,
-           plist[pid]->name, plist[pid]->esp, (unsigned int)(plist[pid]->_begin),
-           plist[pid]->running);
-}
-
-void list_processes(void) {
-    for(int i = 0; i < cpid; i++)
-        printf("pid[%d] : %s , %d , %d\n", plist[i]->pid, plist[i]->name, plist[i]->esp, plist[i]->_begin);
+    w_eax(ctx->eip);
+    w_pc(1);
 }
 
 void sched(void) {
-    step_processes();
-}
-
-void scheduler(void) {
-    for(;;) sched();
 }
